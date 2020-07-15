@@ -9,6 +9,7 @@ verify_ssl = true
 librosa = "*"
 scikit-learn = "*"
 pyaudio = {sys_platform = "== 'win32'", path = "./PyAudio-0.2.11-cp38-cp38-win_amd64.whl"}
+keyboard = "*"
 
 [requires]
 python_version = "3.8"

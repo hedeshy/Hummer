@@ -1,51 +1,55 @@
 print('Recorder')
 
+# Intead of global variables, make class: https://stackoverflow.com/questions/32705518/using-pyaudio-callback-methods-in-a-user-defined-class
+
 import pyaudio
 import wave
+import time
+import keyboard
 
-# List all audio devices
-pa = pyaudio.PyAudio()
-for i in range(pa.get_device_count()):
-	dev = pa.get_device_info_by_index(i)
-	input_chn = dev.get('maxInputChannels', 0)
-	if input_chn > 0:
-		name = dev.get('name')
-		rate = dev.get('defaultSampleRate')
-		print("Index {i}: {name} (Max Channels {input_chn}, Default @ {rate} Hz)".format(
-			i=i, name=name, input_chn=input_chn, rate=int(rate)
+CHANNELS: int = 2
+RATE: int = 44100
+FORMAT: int = pyaudio.paInt16
+WAVE_OUTPUT_FILENAME: str = 'file.wav'
 
-		))
+recorded_frames: bytes = bytes()
+stop_callback: bool = False
 
-# below just takes the default input device and it just blocks the thread
-FORMAT = pyaudio.paInt16
-CHANNELS = 2
-RATE = 44100
-CHUNK = 1024
-RECORD_SECONDS = 5
-WAVE_OUTPUT_FILENAME = "file.wav"
+p: pyaudio.PyAudio = pyaudio.PyAudio()
 
-audio = pyaudio.PyAudio()
+def callback(in_data: bytes, frame_count: int, time_info: dict, status: int) -> (bytes, int):
+	global recorded_frames
+	recorded_frames = recorded_frames + in_data
 
-# start Recording
-stream = audio.open(format=FORMAT, channels=CHANNELS,
-				rate=RATE, input=True,
-				frames_per_buffer=CHUNK)
-print("recording...")
-frames = []
+	global stop_callback
+	if stop_callback:
+		callback_flag = pyaudio.paComplete
+	else:
+		callback_flag = pyaudio.paContinue
 
-for i in range(0, int(RATE * (1.0 / CHUNK) * RECORD_SECONDS)):
-	data = stream.read(CHUNK)
-	frames.append(data)
-print("finished recording")
+	return (None, callback_flag)
 
-# stop Recording
+stream = p.open(format=FORMAT,
+				channels=CHANNELS,
+				rate=RATE,
+				input=True,
+				stream_callback=callback)
+
+stream.start_stream()
+
+while stream.is_active():
+	if keyboard.is_pressed('q'):
+		stop_callback = True
+	time.sleep(0.1)
+
 stream.stop_stream()
 stream.close()
-audio.terminate()
 
 waveFile = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
 waveFile.setnchannels(CHANNELS)
-waveFile.setsampwidth(audio.get_sample_size(FORMAT))
+waveFile.setsampwidth(p.get_sample_size(FORMAT))
 waveFile.setframerate(RATE)
-waveFile.writeframes(b''.join(frames))
+waveFile.writeframes(recorded_frames)
 waveFile.close()
+
+p.terminate()
