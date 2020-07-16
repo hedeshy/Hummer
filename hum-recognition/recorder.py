@@ -9,11 +9,12 @@ import pyaudio
 import wave
 import time
 from pynput import keyboard
+from typing import List
 
 class Recorder:
 	
 	def _record_callback(self, in_data: bytes, frame_count: int, time_info: dict, status: int) -> (bytes, int):
-		self._recorded_frames = self._recorded_frames + in_data # TODO: this is super inefficient
+		self._recorded_frames.append(in_data)
 		return (None, pyaudio.paContinue)
 
 	def stop(self) -> None:
@@ -26,7 +27,7 @@ class Recorder:
 			w.setnchannels(self._channels)
 			w.setsampwidth(self._pa.get_sample_size(self._format))
 			w.setframerate(self._rate)
-			w.writeframes(self._recorded_frames)
+			w.writeframes(b''.join(self._recorded_frames))
 			w.close()
 
 		self._pa.terminate()
@@ -41,7 +42,7 @@ class Recorder:
 		self._rate: int = 44100
 		self._format: int = pyaudio.paInt16
 		self._pa: pyaudio.PyAudio = pyaudio.PyAudio()
-		self._recorded_frames: bytes = bytes()
+		self._recorded_frames: List[bytes] = []
 	
 		# Create stream
 		self._stream = self._pa.open(
