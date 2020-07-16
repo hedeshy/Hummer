@@ -1,9 +1,10 @@
 print('Welcome to the Recorder')
 print('esc: exit, 1: start, 2: stop, 3 (pressing): hum')
 
-# Overview about parameters in pyaudio: https://stackoverflow.com/questions/35970282/what-are-chunks-samples-and-frames-when-using-pyaudio
+# TODO
+# Use time from sounddevice instead of system time for timestamps
 
-import pyaudio
+import sounddevice as sd
 import wave
 import time
 from pynput import keyboard
@@ -11,13 +12,12 @@ from typing import List
 import json
 
 def get_ms() -> int:
-	return time.time_ns() // 1000000 
+	return time.time_ns() // 1000000
 
 class Recorder:
 	
-	def _record_callback(self, in_data: bytes, frame_count: int, time_info: dict, status: int) -> (bytes, int):
-		self._recorded_frames.append(in_data)
-		return (None, pyaudio.paContinue)
+	def _callback(self, indata, frame: int, time: dict, status: int) -> None:
+		self._recorded_frames.append(bytes(indata)) # indata is _cffi_backend.buffer, lets just convert to bytes
 
 	def start_hum(self) -> None:
 		if self._hum_start < 0:
@@ -28,10 +28,9 @@ class Recorder:
 			self._humming.append((self._hum_start, get_ms() - self._start_ms))
 			self._hum_start = -1
 
-
 	def stop(self) -> None:
 
-		self._stream.stop_stream()
+		self._stream.stop()
 		self._stream.close()
 		self.stop_hum() # under discussion whether makes sense (maybe not)
 		print('> stop recording')
@@ -39,19 +38,17 @@ class Recorder:
 		# Store audio as wave
 		with wave.open(self._name + '.wav', 'wb') as w:
 			w.setnchannels(self._channels)
-			w.setsampwidth(self._pa.get_sample_size(self._format))
+			w.setsampwidth(self._stream.samplesize)
 			w.setframerate(self._rate)
 			w.writeframes(b''.join(self._recorded_frames))
 			w.close()
-
-		self._pa.terminate()
 
 		# Store meta data as json
 		# TODO: duration, date / time?, operation system
 		meta: dict = {}
 		meta['channels'] = self._channels
 		meta['rate'] = self._rate
-		meta['format'] = 'Int16' # take member (must decode it)
+		meta['format'] = str(self._dtype)
 		meta['hums'] = self._humming
 		with open(self._name + '.json', 'w') as w:
 			json.dump(meta, w)
@@ -64,26 +61,26 @@ class Recorder:
 
 		# Initialize members
 		self._name = name
-		self._pa: pyaudio.PyAudio = pyaudio.PyAudio()
-		device_info: dict = self._pa.get_default_input_device_info()
-		self._channels: int = int(device_info.get('maxInputChannels'))
-		self._rate: int = int(device_info.get('defaultSampleRate'))
-		self._format: int = pyaudio.paInt16
+
+		host_info: dict = sd.query_hostapis(index=None)[0]
+		device_info: dict = sd.query_devices(device=host_info['default_input_device'])
+		self._channels: int = int(device_info['max_input_channels'])
+		self._rate: int = int(device_info['default_samplerate'])
 		self._recorded_frames: List[bytes] = []
+		self._dtype: str = 'int16'
 		self._hum_start: int = -1 # -1 marks that no humming is going on
 		self._humming: List[(int, int)] = [] # list of humming start / end tuples
 
 		# Create stream
-		self._stream = self._pa.open(
-				format=self._format,
+		self._stream = sd.RawInputStream(
+				device=host_info['default_input_device'],
+				dtype=self._dtype,
 				channels=self._channels,
-				rate=self._rate,
-				input=True,
-				frames_per_buffer=256, # data only stored when 256 collected (crop in the end)
-				stream_callback=self._record_callback)
-		self._stream.start_stream()
+				samplerate=self._rate,
+				callback=self._callback)
+		self._stream.start()
 
-		print('> start recording ' + self._pa.get_default_input_device_info().get('name'))
+		print('> start recording ' + device_info['name'])
 		self._start_ms = get_ms()
 
 # Variables

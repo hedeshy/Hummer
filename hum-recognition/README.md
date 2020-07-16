@@ -1,7 +1,6 @@
 # Setup
 - Requires Python 3.8
 - `pip3 install pipenv`
-- macOS requires `brew install portaudio`
 - Navigate to this directory
 - `pipenv install`
 

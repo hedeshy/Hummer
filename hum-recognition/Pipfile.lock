@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "a3d5c1096e1d9004f46b5455ff0b20a55efe69fd99a80d423c564f396d46daf0"
+            "sha256": "fabc92f8a81c5b5fd2b33cc1342921d673746a82139c9c95974a0129f14064a5"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -156,23 +156,6 @@
             "markers": "python_version >= '3.6'",
             "version": "==1.19.0"
         },
-        "pyaudio": {
-            "hashes": [
-                "sha256:0d92f6a294565260a282f7c9a0b0d309fc8cc988b5ee5b50645634ab9e2da7f7",
-                "sha256:259bb9c1363be895b4f9a97e320a6017dd06bc540728c1a04eb4a7b6fe75035b",
-                "sha256:2a19bdb8ec1445b4f3e4b7b109e0e4cec1fd1f1ce588592aeb6db0b58d4fb3b0",
-                "sha256:51b558d1b28c68437b53218279110db44f69f3f5dd3d81859f569a4a96962bdc",
-                "sha256:589bfad2c615dd4b5d3757e763019c42ab82f06fba5cae64ec02fd7f5ae407ed",
-                "sha256:8f89075b4844ea94dde0c951c2937581c989fabd4df09bfd3f075035f50955df",
-                "sha256:93bfde30e0b64e63a46f2fd77e85c41fd51182a4a3413d9edfaf9ffaa26efb74",
-                "sha256:cf1543ba50bd44ac0d0ab5c035bb9c3127eb76047ff12235149d9adf86f532b6",
-                "sha256:d9a83a432efbe8a49f561e5ddf5bfc40e9f475386eed395e22ab3d7ff980a3f6",
-                "sha256:f78d543a98b730e64621ebf7f3e2868a79ade0a373882ef51c0293455ffa8e6e"
-            ],
-            "markers": "sys_platform == 'win32'",
-            "path": "./PyAudio-0.2.11-cp38-cp38-win_amd64.whl",
-            "version": "==0.2.11"
-        },
         "pycparser": {
             "hashes": [
                 "sha256:2d475327684562c3a96cc71adf7dc8c4f0565175cf86b6d7a404ff4c771f15f0",
@@ -189,6 +172,39 @@
             ],
             "index": "pypi",
             "version": "==1.6.8"
+        },
+        "pyobjc-core": {
+            "hashes": [
+                "sha256:38e7b15a042439dadd18b28b78229e52fb882460fc16ddbae342b9972d5a827c",
+                "sha256:47a89171d218905dbf13011b1a7d698c246cb66fb5f14119bc0d9e039d0486fa",
+                "sha256:60d0c57de915b6ed91a9a26e3bdefdcaeb1288623c69f291338208c5a227d190",
+                "sha256:73938398559b718595076fce4921022f21983dd85ebace3ecbe6182697abe164",
+                "sha256:be312b7a0edb45dd8ea68e70f2b411b59677d4ceb513c48eace73cb78dbfd85f"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==6.2.2"
+        },
+        "pyobjc-framework-cocoa": {
+            "hashes": [
+                "sha256:2a5ab2e33cafe577592c31b2663f3b23f6e142fd717c8cf3826394a380cc4353",
+                "sha256:45e3011efbd8ab4eb4c7ee1f55a8b5ecb41cf66fa797aff0e9454060781645a0",
+                "sha256:6f5e1d59f6e1f4be40dedf051925b8d90c561657c9ec2453652af033fe5c2bf0",
+                "sha256:75821b98fb789d240bea7034c4f96396b2eac3e7b02428b4be9101fc899b7fc3",
+                "sha256:779299f73b8b5a1dd0973b3b16bd706e1f67df44edfb3f3ca6e5e873591c0efc"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==6.2.2"
+        },
+        "pyobjc-framework-quartz": {
+            "hashes": [
+                "sha256:15f3c7b50d0543f66b927e28cd336c1a6962d58c9808799f49dcf30e4a1a13c2",
+                "sha256:552b15eb409f87d34870345feabe6695375a031d8c4063f175dbaa3422005160",
+                "sha256:56d183dc32b11f15ceb0833a2a24953d1212264f07c274e2b8878e691eb72472",
+                "sha256:5a56cfc0289061eaf33f04e3c73e749e04f177b0c1ee8749aa46e87d1e897cda",
+                "sha256:a57c7f50286d96ee7b9051c657a8607f0449949891cf0697be3efac76a97be7e"
+            ],
+            "markers": "sys_platform == 'darwin'",
+            "version": "==6.2.2"
         },
         "resampy": {
             "hashes": [
@@ -247,6 +263,17 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==1.15.0"
+        },
+        "sounddevice": {
+            "hashes": [
+                "sha256:028f6e5df83027f4bfba5d6d61e6d46eb8689f9e647825e09f539920dee17d2c",
+                "sha256:8b63960361bda8b7528454c7fe07339414220e1f6c7a2778d8067562cad374d0",
+                "sha256:954d5fd638723573e454061cc9238cee09a59ea7e673ebf4ea6b21d02d8b5e73",
+                "sha256:9de2a9e8ec35db228f0b157cc22de284bb7375944ea322fa3c0e1f4eee861931",
+                "sha256:a8dccae86d05ca6c72362698e9e94e808bccae9075f83f2e4c572e9137282d3c"
+            ],
+            "index": "pypi",
+            "version": "==0.3.15"
         },
         "soundfile": {
             "hashes": [
