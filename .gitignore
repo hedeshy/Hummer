@@ -2,3 +2,4 @@
 *.wav
 *.json
 Pipfile.lock
+.vscode

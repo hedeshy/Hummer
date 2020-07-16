@@ -10,6 +10,8 @@ librosa = "*"
 scikit-learn = "*"
 pynput = "*"
 sounddevice = "*"
+numba = "==0.48"
+matplotlib = "*"
 
 [requires]
 python_version = "3.8"
