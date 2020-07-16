@@ -19,9 +19,11 @@ def get_ms() -> int:
 
 class Recorder:
 	
-	def _callback(self, indata, frame: int, time: dict, status: int) -> None:
+	def _callback(self, indata, frames: int, time: dict, status: int) -> None:
+		current_ms: int = get_ms()
 		if self._start_ms < 0: # looks like it takes some miliseconds until this gets called the first time. thus, regard that as start
-			self._start_ms: int = get_ms()
+			self._start_ms: int = current_ms # - (frames / self._rate) # subtract time for collecting the first samples
+		self._end_ms = current_ms
 		self._recorded_frames.append(bytes(indata)) # indata is _cffi_backend.buffer, lets just convert to bytes
 
 	def start_hum(self) -> None:
@@ -31,10 +33,10 @@ class Recorder:
 		self._humming_events.append((get_ms() - self._start_ms, 'end'))
 
 	def stop(self) -> None:
-		duration: int = get_ms() - self._start_ms
 		self._stream.stop()
 		self._stream.close()
 		print('> stop recording')
+		duration: int = self._end_ms - self._start_ms
 
 		# Store audio as wave
 		byte_count: int = 0
@@ -53,8 +55,8 @@ class Recorder:
 		meta['rate'] = self._rate
 		meta['format'] = str(self._dtype)
 		meta['hums'] = self._humming_events
-		meta['duration [ms]'] = duration
-		meta['byte_count'] = byte_count
+		# meta['duration [ms]'] = duration
+		# meta['byte_count'] = byte_count
 		with open(self._name + '.json', 'w') as w:
 			json.dump(meta, w)
 
@@ -80,6 +82,7 @@ class Recorder:
 				callback=self._callback)
 		self._stream.start()
 		self._start_ms: int = -1
+		self._end_ms: int = -1
 
 		print('> start recording ' + device_info['name'])
 
