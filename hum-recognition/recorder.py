@@ -20,14 +20,10 @@ class Recorder:
 		return (None, pyaudio.paContinue)
 
 	def start_hum(self) -> None:
-		
-		# Remember start of humming
 		if self._hum_start < 0:
 			self._hum_start = get_ms() - self._start_ms
 
 	def stop_hum(self) -> None:
-		
-		# Store start and end of humming
 		if self._hum_start >= 0:
 			self._humming.append((self._hum_start, get_ms() - self._start_ms))
 			self._hum_start = -1
@@ -51,6 +47,7 @@ class Recorder:
 		self._pa.terminate()
 
 		# Store meta data as json
+		# TODO: duration, date / time?, operation system
 		meta: dict = {}
 		meta['channels'] = self._channels
 		meta['rate'] = self._rate
@@ -67,14 +64,15 @@ class Recorder:
 
 		# Initialize members
 		self._name = name
-		self._channels: int = 2
-		self._rate: int = 44100
-		self._format: int = pyaudio.paInt16
 		self._pa: pyaudio.PyAudio = pyaudio.PyAudio()
+		device_info: dict = self._pa.get_default_input_device_info()
+		self._channels: int = int(device_info.get('maxInputChannels'))
+		self._rate: int = int(device_info.get('defaultSampleRate'))
+		self._format: int = pyaudio.paInt16
 		self._recorded_frames: List[bytes] = []
 		self._hum_start: int = -1 # -1 marks that no humming is going on
 		self._humming: List[(int, int)] = [] # list of humming start / end tuples
-	
+
 		# Create stream
 		self._stream = self._pa.open(
 				format=self._format,
@@ -85,7 +83,7 @@ class Recorder:
 				stream_callback=self._record_callback)
 		self._stream.start_stream()
 
-		print('> start recording')
+		print('> start recording ' + self._pa.get_default_input_device_info().get('name'))
 		self._start_ms = get_ms()
 
 # Variables
