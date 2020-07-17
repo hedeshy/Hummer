@@ -6,12 +6,13 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-librosa = "*"
 scikit-learn = "*"
-pynput = "*"
+imbalance-learn = {git = "https://github.com/scikit-learn-contrib/imbalanced-learn.git"}
 sounddevice = "*"
-numba = "==0.48"
 matplotlib = "*"
+pynput = "*"
+librosa = "*"
+numba = "==0.48"
 
 [requires]
 python_version = "3.8"
