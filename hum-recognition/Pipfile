@@ -13,6 +13,7 @@ matplotlib = "*"
 pynput = "*"
 librosa = "*"
 numba = "==0.48"
+pyinstaller = "*"
 
 [requires]
 python_version = "3.8"

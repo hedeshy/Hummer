@@ -7,3 +7,4 @@
 # Execution
 - `pipenv shell`
 - Run corresponding scripts by calling `python script.py`
+- Optionally, run `pyinstaller --onefile --hidden-import='pkg_resources.py2_warn' .\recorder.py` to create an executable

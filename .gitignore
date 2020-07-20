@@ -3,3 +3,6 @@
 *.json
 Pipfile.lock
 .vscode
+build
+dist
+*.spec
