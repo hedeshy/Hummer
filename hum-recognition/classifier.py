@@ -11,6 +11,7 @@ from sklearn.metrics import classification_report
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE
+from joblib import dump
 
 SEGMENT_WIDTH_S: float = 0.5
 SEGMENT_STEP_S: float = 0.1
@@ -149,3 +150,6 @@ forest.fit(X_train, y_train)
 # Predict on test set and print report
 y_pred = forest.predict(X_test).astype(int)
 print(classification_report(y_test, y_pred, target_names=['no humming', 'humming']))
+
+# Store model to use it at interaction
+dump(forest, 'model.joblib') 
