@@ -27,7 +27,7 @@ def compute_overlap(a, b):
 x, sr = librosa.load('data/raphael.wav', sr=None) # no resampling
 x_mono: np.ndarray = librosa.to_mono(x) # length of x_mono / sampling rate = duration in s
 length_s: float = x_mono.shape[0] / sr # length of clip in seconds
-librosa.output.write_wav('output.wav', x_mono, sr, norm=False)
+# librosa.output.write_wav('output.wav', x_mono, sr, norm=False)
 
 print(x_mono.shape)
 
@@ -125,7 +125,7 @@ print()
 data: np.array = np.array(data)
 target: np.array = np.array(target)
 
-# Split training and test data
+# Split training and test data; TODO: optionally, use entire dataset to train classifier
 X_train, X_test, y_train, y_test = train_test_split(data, target, test_size=0.3, random_state=42)
 sm = SMOTE(random_state=42, sampling_strategy='not majority')
 X_train, y_train = sm.fit_resample(X_train, y_train)
