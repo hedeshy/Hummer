@@ -14,6 +14,7 @@ pynput = "*"
 librosa = "*"
 numba = "==0.48"
 websockets = "*"
+pyinstaller = "*"
 
 [requires]
 python_version = "3.8"

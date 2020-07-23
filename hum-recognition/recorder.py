@@ -133,7 +133,8 @@ def on_release(key) -> bool:
 # Initialize keyboard listener
 listener = keyboard.Listener(
 	on_press=on_press,
-	on_release=on_release)
+	on_release=on_release,
+	suppress=True)
 listener.start()
 
 # Main loop
