@@ -8,12 +8,6 @@ import datetime
 import random
 import websockets
 
-# TODO
-# Load model (done)
-# Open WebSocket and send humming yes/no to Web
-# Make minimal website that listens to the websocket
-# https://websockets.readthedocs.io/en/stable/intro.html
-
 SEGMENT_WIDTH_S = 0.5 # limits the "length" of humming
 
 class Recognizer:
