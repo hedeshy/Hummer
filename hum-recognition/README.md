@@ -15,4 +15,3 @@
 - move model features etc. in own, reusable python module
 - decide whether more than one humming mode label is required
 - make WebSocket more efficient
-- make `classifier.py` take more than one file
