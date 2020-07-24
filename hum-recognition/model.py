@@ -14,6 +14,7 @@ from imblearn.over_sampling import SMOTE
 from joblib import dump
 from os import listdir
 from os.path import isfile, join, splitext
+import common
 
 # Inspiration: https://www.kdnuggets.com/2020/02/audio-data-analysis-deep-learning-python-part-1.html
 
@@ -107,31 +108,14 @@ for f in files:
 			label = 1 # humming
 		target.append(label)
 
+		# Compute feature vector
+		data.append(common.compute_feature_vector(y, sr))
+
 		# Prepare next iteration
 		pos_s += SEGMENT_STEP_S
 		# print(str(start_idx) + ', ' + str(end_idx) + ': ' + str(label))
 		print('.', end='', flush=True)
 
-		# Compute features
-		rmse = librosa.feature.rms(y=y)[0]
-		chroma_stft = librosa.feature.chroma_stft(y=y, sr=sr)
-		spec_cent = librosa.feature.spectral_centroid(y=y, sr=sr)
-		spec_bw = librosa.feature.spectral_bandwidth(y=y, sr=sr)
-		rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr)
-		zcr = librosa.feature.zero_crossing_rate(y)
-		mfcc = librosa.feature.mfcc(y=y, sr=sr)
-
-		# Fill feature vector
-		seg = []
-		seg.append(np.mean(chroma_stft))
-		seg.append(np.mean(rmse))
-		seg.append(np.mean(spec_cent))
-		seg.append(np.mean(spec_bw))
-		seg.append(np.mean(rolloff))
-		seg.append(np.mean(zcr))
-		for e in mfcc: # 20 features
-			seg.append(np.mean(e))
-		data.append(seg)
 	print()
 
 # Convert dataset to numpy arrays
@@ -154,9 +138,9 @@ clf = RandomForestClassifier(
 
 # Perform cross validation and report results
 scoring = ['precision_macro', 'recall_macro']
-scores = cross_validate(clf, data, target, scoring=scoring, cvint=EVALUATION_FOLDS)
-print('Recall (Macro, k='str(EVALUATION_FOLDS)'): ' + str(np.mean(scores['test_recall_macro'])))
-print('Precision (Macro, k='str(EVALUATION_FOLDS)'): ' + str(np.mean(scores['test_precision_macro'])))
+scores = cross_validate(clf, data, target, scoring=scoring, cv=EVALUATION_FOLDS)
+print('Recall (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_recall_macro'])))
+print('Precision (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_precision_macro'])))
 
 # Scale data (TODO: also scale data for the cross validation, but use a pipeline instead)
 # scaler = StandardScaler()

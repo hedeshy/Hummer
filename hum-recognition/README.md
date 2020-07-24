@@ -10,6 +10,5 @@
 - Optionally, run `pyinstaller --onefile --hidden-import='pkg_resources.py2_warn' recorder.py` to create an executable
 
 # TODO
-- move model features etc. in own, reusable python module
 - decide whether more than one humming mode label is required
 - make WebSocket more efficient

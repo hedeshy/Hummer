@@ -7,6 +7,7 @@ import asyncio
 import datetime
 import random
 import websockets
+import common
 
 SEGMENT_WIDTH_S = 0.5 # limits the "length" of humming
 
@@ -14,6 +15,8 @@ class Recognizer:
 
 	def _callback(self, indata, frames: int, time: dict, status: int) -> None:
 		npdata = np.frombuffer(indata, dtype=np.int16)
+
+		# Process audio to window length
 		self._segment = np.append(self._segment, npdata)
 		sample_count: int = self._segment.shape[0]
 		max_sample_count: int = SEGMENT_WIDTH_S * self._rate * self._channels
@@ -21,26 +24,9 @@ class Recognizer:
 		self._segment = self._segment[-count:]
 		y: np.ndarray = librosa.to_mono(self._segment)
 
-		# Compute features (TODO: put this into common Python module)
+		# Compute features
 		sr: int = self._rate
-		rmse = librosa.feature.rms(y=y)[0]
-		chroma_stft = librosa.feature.chroma_stft(y=y, sr=sr)
-		spec_cent = librosa.feature.spectral_centroid(y=y, sr=sr)
-		spec_bw = librosa.feature.spectral_bandwidth(y=y, sr=sr)
-		rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr)
-		zcr = librosa.feature.zero_crossing_rate(y)
-		mfcc = librosa.feature.mfcc(y=y, sr=sr)
-
-		# Fill feature vector
-		seg = []
-		seg.append(np.mean(chroma_stft))
-		seg.append(np.mean(rmse))
-		seg.append(np.mean(spec_cent))
-		seg.append(np.mean(spec_bw))
-		seg.append(np.mean(rolloff))
-		seg.append(np.mean(zcr))
-		for e in mfcc: # 20 features
-			seg.append(np.mean(e))
+		seg = common.compute_feature_vector(y, sr)
 
 		# TODO: No scaling performed as the model does not do any scaling, too
 		
