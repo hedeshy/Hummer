@@ -17,4 +17,3 @@
 - decide whether more than one humming mode label is required
 - make WebSocket more efficient
 - make `classifier.py` take more than one file
-- make `recorder.py` ask for the name

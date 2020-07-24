@@ -1,5 +1,4 @@
 print('Welcome to the Recorder')
-print('esc: exit, 1: start, 2: stop, 3 (pressing): hum')
 
 import sounddevice as sd
 from pynput import keyboard
@@ -8,11 +7,6 @@ import wave
 import time
 import json
 import sys
-import argparse
-
-parser = argparse.ArgumentParser()
-parser.add_argument('name', type=str, default='none', help='name for the recording', nargs='?')
-args = parser.parse_args()
 
 def get_ms() -> int:
 	return time.time_ns() // 1000000
@@ -87,12 +81,42 @@ class Recorder:
 		print('> start recording ' + device_info['name'])
 
 # Variables
+name: str = ''
+name_entered: bool = False
 recorder: Recorder = None
 count: int = 0
 start: bool = False
 stop: bool = False
 escape: bool = False
 humming: bool = False # avoid repeated call at pressing of '3'
+
+# On key press event for name entering
+def on_press_name(key) -> bool:
+	try:
+		if key == keyboard.Key.enter:
+			global name_entered
+			name_entered = True
+			return False
+		else:
+			global name
+			name += key.char
+			print(name)
+	except:
+		pass
+	return True # continue listening
+
+# Naming mode
+print('Enter your nickname (ASCII-only): <ENTER> done')
+
+# Initialize name listener
+listener = keyboard.Listener(
+	on_press=on_press_name,
+	suppress=True)
+listener.start()
+
+while not name_entered:
+	time.sleep(0.05)
+listener.stop()
 
 # On key press event
 def on_press(key) -> bool:
@@ -110,7 +134,7 @@ def on_press(key) -> bool:
 			print('> start humming')
 			humming = True
 	except:
-		tmp = 0 # to catch hits on shift etc.
+		pass
 	return True # continue listening
 
 # On release event
@@ -127,10 +151,13 @@ def on_release(key) -> bool:
 				print('> stop humming')
 				humming = False
 	except:
-		tmp = 0 # to catch hits on shift etc.
+		pass
 	return True # continue listening
 
-# Initialize keyboard listener
+# Recording mode
+print('Record: <ESC> exit, <1> start, <2> stop, <3> humming (pressing)')
+
+# Initialize actual keyboard listener
 listener = keyboard.Listener(
 	on_press=on_press,
 	on_release=on_release,
@@ -151,7 +178,7 @@ while True:
 
 	# Start
 	if not recorder and start:
-		recorder = Recorder(name=args.name + '_' + str(count))
+		recorder = Recorder(name=name + '_' + str(count))
 		count += 1
 
 	# Reset triggers and sleep
