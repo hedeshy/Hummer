@@ -12,7 +12,7 @@ def get_ms() -> int:
 	return time.time_ns() // 1000000
 
 class Recorder:
-	
+
 	def _callback(self, indata, frames: int, time: dict, status: int) -> None:
 		current_ms: int = get_ms()
 		if self._start_ms < 0: # looks like it takes some miliseconds until this gets called the first time. thus, regard that as start
@@ -30,10 +30,10 @@ class Recorder:
 		self._stream.stop()
 		self._stream.close()
 		print('> stop recording')
-		duration: int = self._end_ms - self._start_ms
+		# duration: int = self._end_ms - self._start_ms
 
 		# Store audio as wave
-		byte_count: int = 0
+		# byte_count: int = 0
 		with wave.open(self._name + '.wav', 'wb') as w:
 			w.setnchannels(self._channels)
 			w.setsampwidth(self._stream.samplesize)
@@ -41,7 +41,7 @@ class Recorder:
 			frames: bytes = b''.join(self._recorded_frames)
 			w.writeframes(frames)
 			w.close()
-			byte_count = sys.getsizeof(frames)
+			# byte_count = sys.getsizeof(frames)
 
 		# Store meta data as json
 		meta: dict = {}
