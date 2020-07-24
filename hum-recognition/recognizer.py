@@ -41,6 +41,8 @@ class Recognizer:
 		seg.append(np.mean(zcr))
 		for e in mfcc: # 20 features
 			seg.append(np.mean(e))
+
+		# TODO: No scaling performed as the model does not do any scaling, too
 		
 		# Classify whether humming or not
 		pred = self._model.predict(np.array([seg])).astype(int)

@@ -7,9 +7,9 @@ from typing import List
 from typing import Tuple
 from typing import Set
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import classification_report
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_validate
+from sklearn.metrics import recall_score
 from imblearn.over_sampling import SMOTE
 from joblib import dump
 from os import listdir
@@ -21,13 +21,13 @@ DATA_PATH = r'./data'
 SEGMENT_WIDTH_S: float = 0.5
 SEGMENT_STEP_S: float = 0.1
 RATIO_OF_HUM: float = 0.5 # at least 50% of segment must contain humming to be labeled 'True'
+EVALUATION_FOLDS: int = 5
 
 def compute_overlap(a, b):
 	return max(0, min(a[1], b[1]) - max(a[0], b[0]))
 
 # Get dataset
 files: Set[str] = set([splitext(f)[0] for f in listdir(DATA_PATH) if isfile(join(DATA_PATH, f))])
-print(files)
 
 # Import dataset
 data: List[List[float]] = []
@@ -132,25 +132,18 @@ for f in files:
 		for e in mfcc: # 20 features
 			seg.append(np.mean(e))
 		data.append(seg)
-print()
+	print()
 
 # Convert dataset to numpy arrays
 data: np.array = np.array(data)
 target: np.array = np.array(target)
 
-# Split training and test data; TODO: optionally, use entire dataset to train classifier
-X_train, X_test, y_train, y_test = train_test_split(data, target, test_size=0.3, random_state=42)
+# Resample the dataset
 sm = SMOTE(random_state=42, sampling_strategy='not majority')
-X_train, y_train = sm.fit_resample(X_train, y_train)
-
-# Scale data
-scaler = StandardScaler()
-scaler.fit(X_train)
-X_train = scaler.transform(X_train)
-X_test = scaler.transform(X_test)
+data, target = sm.fit_resample(data, target)
 
 # Random Forest
-forest = RandomForestClassifier(
+clf = RandomForestClassifier(
 	random_state=42,
 	n_estimators=25,
 	class_weight=None, # 'balanced', 'balanced_subsample'
@@ -158,11 +151,19 @@ forest = RandomForestClassifier(
 	max_depth=None,
 	min_samples_split=2,
 	min_samples_leaf=1)
-forest.fit(X_train, y_train)
 
-# Predict on test set and print report
-y_pred = forest.predict(X_test).astype(int)
-print(classification_report(y_test, y_pred, target_names=['no humming', 'humming']))
+# Perform cross validation and report results
+scoring = ['precision_macro', 'recall_macro']
+scores = cross_validate(clf, data, target, scoring=scoring, cvint=EVALUATION_FOLDS)
+print('Recall (Macro, k='str(EVALUATION_FOLDS)'): ' + str(np.mean(scores['test_recall_macro'])))
+print('Precision (Macro, k='str(EVALUATION_FOLDS)'): ' + str(np.mean(scores['test_precision_macro'])))
 
-# Store model to use it at interaction
-dump(forest, 'model.joblib') 
+# Scale data (TODO: also scale data for the cross validation, but use a pipeline instead)
+# scaler = StandardScaler()
+# scaler.fit(data)
+# data = scaler.transform(data)
+# Note: results without scaling look better... (scaling not required for random forest)
+
+# Store model trained by entire data to be used for interaction
+clf.fit(data, target)
+dump(clf, 'model.joblib') 
