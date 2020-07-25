@@ -123,9 +123,9 @@ for f in files:
 data: np.array = np.array(data)
 target: np.array = np.array(target)
 
-# Resample the dataset
-sm = SMOTE(random_state=42, sampling_strategy='not majority')
-data, target = sm.fit_resample(data, target)
+# Resample the dataset (TODO: reintegrate)
+# sm = SMOTE(random_state=42, sampling_strategy='not majority')
+# data, target = sm.fit_resample(data, target)
 
 # Random Forest
 clf = RandomForestClassifier(
@@ -153,3 +153,7 @@ print('Precision (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(score
 clf.fit(data, target)
 dump(clf, 'model.joblib')
 print(classification_report(target, clf.predict(data), target_names=['no humming', 'humming']))
+
+# TODO: decide which features are important (maybe apply PCA)
+importances = clf.feature_importances_
+print(importances)
