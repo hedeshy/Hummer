@@ -32,7 +32,7 @@ class Recognizer:
 		
 		# Classify whether humming or not
 		pred = self._model.predict(np.array([seg])).astype(int)
-		self._humming = bool(pred)
+		self._humming = pred[0] > 0
 
 	def stop(self) -> None:
 		self._stream.stop()

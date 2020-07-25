@@ -9,6 +9,7 @@ from typing import Set
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_validate
+from sklearn.metrics import classification_report
 from sklearn.metrics import recall_score
 from imblearn.over_sampling import SMOTE
 from joblib import dump
@@ -150,4 +151,5 @@ print('Precision (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(score
 
 # Store model trained by entire data to be used for interaction
 clf.fit(data, target)
-dump(clf, 'model.joblib') 
+dump(clf, 'model.joblib')
+print(classification_report(target, clf.predict(data), target_names=['no humming', 'humming']))
