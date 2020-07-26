@@ -16,12 +16,11 @@ from joblib import dump
 from os import listdir
 from os.path import isfile, join, splitext
 import common
-import wave
 
 # Inspiration: https://www.kdnuggets.com/2020/02/audio-data-analysis-deep-learning-python-part-1.html
 
-DATA_PATH = r'./data'
-TMP_PATH = r'./tmp'
+DATA_PATH: str = r'./data'
+TMP_PATH: str = r'./tmp'
 SEGMENT_WIDTH_S: float = 0.5
 SEGMENT_STEP_S: float = 0.1
 RATIO_OF_HUM: float = 0.5 # at least 50% of segment must contain humming to be labeled 'True'
@@ -43,13 +42,12 @@ for f in files:
 	print('Processing: ' + f)
 
 	# Import sound
-	x, sr = librosa.load('data/'+ f + '.wav', sr=None) # no resampling
+	x, sr = librosa.load('data/'+ f + '.wav', sr=None, dtype=np.float32) # no resampling
 	x_mono: np.ndarray = librosa.to_mono(x) # length of x_mono / sampling rate = duration in s
 	length_s: float = x_mono.shape[0] / sr # length of clip in seconds
 	# librosa.output.write_wav('output.wav', x_mono, sr, norm=False)
 
 	# print(x_mono.shape)
-
 	# Plot wave
 	# plt.figure(figsize=(14, 5))
 	# librosa.display.waveplot(x_mono, sr=sr)
@@ -77,7 +75,7 @@ for f in files:
 	hums_ms: List[Tuple[int,int]] = []
 	if hum_starts_ms and hum_ends_ms:
 
-		# Check if there is a end before the first start (humming was going on at start of recording)
+		# Check if there is an end before the first start (humming was going on at start of recording)
 		if hum_ends_ms[0] < hum_starts_ms[0]:
 			hum_starts_ms.insert(0,0)
 
@@ -101,6 +99,9 @@ for f in files:
 		end_idx: int = int((pos_s + SEGMENT_WIDTH_S) * sr) - 1
 		y: np.array = x_mono[start_idx:end_idx]
 
+		# Compute feature vector
+		data.append(common.compute_feature_vector(y, sr))
+
 		# Compute label
 		label: int = 0 # no humming
 		start_ms: int = int(1000 * (start_idx / sr))
@@ -111,18 +112,6 @@ for f in files:
 		if float(overlap) / (SEGMENT_WIDTH_S*1000) >= RATIO_OF_HUM:
 			label = 1 # humming
 		target.append(label)
-		
-		# Export segments for check (TODO: tmp folder must exist)
-		# with wave.open(TMP_PATH + '/' + str(i) + '_' + str(label) + '.wav', 'wb') as w:
-		# 	w.setnchannels(1) # converted to mono
-		# 	w.setsampwidth(2) # int16 == 2 byte (assumption)
-		# 	w.setframerate(sr)
-		# 	frames: bytes = a.tobytes()
-		# 	w.writeframes(frames)
-		# 	w.close()
-
-		# Compute feature vector
-		data.append(common.compute_feature_vector(y, sr))
 
 		# Prepare next iteration
 		pos_s += SEGMENT_STEP_S

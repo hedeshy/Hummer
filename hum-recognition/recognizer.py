@@ -14,7 +14,7 @@ SEGMENT_WIDTH_S = 0.5 # limits the "length" of humming
 class Recognizer:
 
 	def _callback(self, indata, frames: int, time: dict, status: int) -> None:
-		npdata = np.frombuffer(indata, dtype=np.int16)
+		npdata = librosa.util.buf_to_float(indata, n_bytes=2, dtype=np.float32) # int16 to float32
 
 		# Process audio to window length
 		self._segment = np.append(self._segment, npdata)
