@@ -16,10 +16,12 @@ from joblib import dump
 from os import listdir
 from os.path import isfile, join, splitext
 import common
+import wave
 
 # Inspiration: https://www.kdnuggets.com/2020/02/audio-data-analysis-deep-learning-python-part-1.html
 
 DATA_PATH = r'./data'
+TMP_PATH = r'./tmp'
 SEGMENT_WIDTH_S: float = 0.5
 SEGMENT_STEP_S: float = 0.1
 RATIO_OF_HUM: float = 0.5 # at least 50% of segment must contain humming to be labeled 'True'
@@ -91,6 +93,7 @@ for f in files:
 
 	# Go over mono data and split into segments
 	pos_s = 0.0
+	i: int = 0
 	while pos_s + SEGMENT_WIDTH_S <= length_s:
 		
 		# Get audio segment
@@ -108,6 +111,15 @@ for f in files:
 		if float(overlap) / (SEGMENT_WIDTH_S*1000) >= RATIO_OF_HUM:
 			label = 1 # humming
 		target.append(label)
+		
+		# Export segments for check (TODO: tmp folder must exist)
+		# with wave.open(TMP_PATH + '/' + str(i) + '_' + str(label) + '.wav', 'wb') as w:
+		# 	w.setnchannels(1) # converted to mono
+		# 	w.setsampwidth(2) # int16 == 2 byte (assumption)
+		# 	w.setframerate(sr)
+		# 	frames: bytes = a.tobytes()
+		# 	w.writeframes(frames)
+		# 	w.close()
 
 		# Compute feature vector
 		data.append(common.compute_feature_vector(y, sr))
@@ -116,6 +128,7 @@ for f in files:
 		pos_s += SEGMENT_STEP_S
 		# print(str(start_idx) + ', ' + str(end_idx) + ': ' + str(label))
 		print('.', end='', flush=True)
+		i += 1
 
 	print()
 
