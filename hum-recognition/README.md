@@ -12,3 +12,4 @@
 # TODO
 - decide whether more than one humming mode label is required
 - make WebSocket more efficient
+- use scipy to export .wav with float32 structure. can be used to verify model input / recognizer
