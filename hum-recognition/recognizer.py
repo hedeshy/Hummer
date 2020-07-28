@@ -9,7 +9,7 @@ import random
 import websockets
 import common
 
-SEGMENT_WIDTH_S = 0.5 # limits the "length" of humming
+SEGMENT_WIDTH_S = 1.0 # limits the "length" of humming
 
 class Recognizer:
 
@@ -32,7 +32,7 @@ class Recognizer:
 		
 		# Classify whether humming or not
 		pred = self._model.predict(np.array([seg])).astype(int)
-		self._humming = pred[0] > 0
+		self._humming = pred[0]
 
 	def stop(self) -> None:
 		self._stream.stop()
@@ -48,7 +48,7 @@ class Recognizer:
 		self._segment: np.array = np.empty(1)
 		self._dtype: str = 'int16'
 		self._model: RandomForestClassifier = model
-		self._humming: bool = False
+		self._humming: int = 0
 
 		# Create stream
 		self._stream = sd.RawInputStream(

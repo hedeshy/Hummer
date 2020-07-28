@@ -17,14 +17,16 @@ from joblib import dump
 from os import listdir
 from os.path import isfile, join, splitext
 import common
+from collections import defaultdict
+from collections import OrderedDict
 
 # Inspiration: https://www.kdnuggets.com/2020/02/audio-data-analysis-deep-learning-python-part-1.html
 
 DATA_PATH: str = r'./data'
 TMP_PATH: str = r'./tmp'
-SEGMENT_WIDTH_S: float = 0.5
+SEGMENT_WIDTH_S: float = 1.0
 SEGMENT_STEP_S: float = 0.1
-RATIO_OF_HUM: float = 0.5 # at least 50% of segment must contain humming to be labeled 'True'
+RATIO_OF_HUM: float = 0.5 # at least 50% of segment must contain humming to be labeled as not 'none'
 EVALUATION_FOLDS: int = 5
 
 def compute_overlap(a, b):
@@ -61,34 +63,36 @@ for f in files:
 
 	# print(meta['hums'])
 
+	# Map from class name to class number
+	class_name_to_int: OrderedDict = OrderedDict([ ('none', 0), ('question', 1), ('positive', 2), ('negative', 3), ('continuous', 4)])
+
 	# Collect hums into starts and ends
-	hum_starts_ms: List[int] = []
+	hum_starts_ms: List[Tuple[int,int]] = [] # tuple of start and class
 	hum_ends_ms: List[int] = []
 	for ts, state in meta['hums']:
-		if state == 'start':
-			hum_starts_ms.append(ts)
-		else:
+		if state == 'end':
 			hum_ends_ms.append(ts)
-	hum_starts_ms.sort()
-	hum_ends_ms.sort()
+		else:
+			hum_starts_ms.append((ts, class_name_to_int[state[6:]]))
+	# Above assumes that states are ordered correctly in the json (should be the case)
 
-	# Go over hums and make pairs of start and end (to be checked by later segments for intersection)
-	hums_ms: List[Tuple[int,int]] = []
+	# Go over hums and make triples of start and end and class integer (to be checked by later segments for intersection)
+	hums_ms: List[Tuple[int,int,int]] = []
 	if hum_starts_ms and hum_ends_ms:
 
-		# Check if there is an end before the first start (humming was going on at start of recording)
-		if hum_ends_ms[0] < hum_starts_ms[0]:
-			hum_starts_ms.insert(0,0)
+		# Check if there is an end before the first start and remove that end
+		# if hum_ends_ms[0] < hum_starts_ms[0]:
+		# 	hum_starts_ms.insert(0,0) # Issue: not sure which class of humming is ended here / no info in the data
 
-		for start_ms in hum_starts_ms:
-			success: bool = False
+		for start_ms_class in hum_starts_ms:
+			success: bool = False # succes in finding an end
 			for end_ms in hum_ends_ms:
-				if end_ms > start_ms:
+				if end_ms > start_ms_class[0]:
 					success = True
-					hums_ms.append((start_ms,end_ms))
+					hums_ms.append((start_ms_class[0],end_ms,start_ms_class[1]))
 					break
 			if not success:
-				hums_ms.append(start_ms, int(length_s*1000))
+				hums_ms.append(start_ms_class[0], int(length_s*1000), start_ms_class[1]) # just assume the end of the recording as end
 
 	# Go over mono data and split into segments
 	pos_s = 0.0
@@ -107,17 +111,23 @@ for f in files:
 		label: int = 0 # no humming
 		start_ms: int = int(1000 * (start_idx / sr))
 		end_ms: int = int(1000 * (end_idx / sr))
-		overlap: int = 0
+		overlap: defaultdict = defaultdict(int)
 		for hum_ms in hums_ms:
-			overlap += compute_overlap((start_ms, end_ms),hum_ms)
-		if float(overlap) / (SEGMENT_WIDTH_S*1000) >= RATIO_OF_HUM:
-			label = 1 # humming
+			overlap[str(hum_ms[2])] += compute_overlap((start_ms, end_ms),(hum_ms[0],hum_ms[1]))
+		class_overlap: int = 0
+		class_int: int = 0
+		for key, value in overlap.items(): # get most overlapping humming class
+			if value > class_overlap:
+				class_overlap = value
+				class_int = key
+		if float(class_overlap) / (SEGMENT_WIDTH_S*1000) >= RATIO_OF_HUM:
+			label = class_int # humming
 		target.append(label)
 
 		# Prepare next iteration
 		pos_s += SEGMENT_STEP_S
 		# print(str(start_idx) + ', ' + str(end_idx) + ': ' + str(label))
-		print('.', end='', flush=True)
+		print(str(label), end='', flush=True)
 		i += 1
 
 	print()
@@ -131,15 +141,15 @@ target: np.array = np.array(target)
 # pca.fit(data)
 # data = pca.transform(data) # TODO: store PCA such that at recognition the same PCA can be applied
 
-# Resample the dataset to remove imbalance
-sm = SMOTE(random_state=42, sampling_strategy='not majority')
-data, target = sm.fit_resample(data, target)
+# Resample the dataset to remove imbalance TODO: reintegrate (maybe not enough sample data) and remember to set class_weight attribute in forest
+# sm = SMOTE(random_state=42, sampling_strategy='not majority')
+# data, target = sm.fit_resample(data, target)
 
 # Random Forest
 clf = RandomForestClassifier(
 	random_state=42,
-	n_estimators=25,
-	class_weight=None, # 'balanced', 'balanced_subsample'
+	n_estimators=100,
+	class_weight='balanced', # None, 'balanced_subsample'
 	criterion='entropy', # 'gini'
 	max_depth=None,
 	min_samples_split=2,
@@ -160,7 +170,7 @@ print('Precision (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(score
 # Store model trained by entire data to be used for interaction
 clf.fit(data, target)
 dump(clf, 'model.joblib')
-print(classification_report(target, clf.predict(data), target_names=['no humming', 'humming']))
+print(classification_report(target, clf.predict(data), target_names=class_name_to_int.keys()))
 
 # TODO: decide which features are important (maybe apply PCA)
 importances = clf.feature_importances_

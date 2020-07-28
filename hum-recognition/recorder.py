@@ -20,8 +20,8 @@ class Recorder:
 		self._end_ms = current_ms
 		self._recorded_frames.append(bytes(indata)) # indata is _cffi_backend.buffer, lets just convert to bytes
 
-	def start_hum(self) -> None:
-		self._humming_events.append((get_ms() - self._start_ms, 'start'))
+	def start_hum(self, event: str) -> None:
+		self._humming_events.append((get_ms() - self._start_ms, event))
 
 	def stop_hum(self) -> None:
 		self._humming_events.append((get_ms() - self._start_ms, 'end'))
@@ -88,7 +88,7 @@ count: int = 0
 start: bool = False
 stop: bool = False
 escape: bool = False
-humming: bool = False # avoid repeated call at pressing of '3'
+humming: bool = False # true if there is any humming
 
 # On key press event for name entering
 def on_press_name(key) -> bool:
@@ -128,10 +128,25 @@ def on_press(key) -> bool:
 			global stop
 			stop = True
 		global humming
-		if key.char == '3' and not humming:
+		if not humming and key.char == '3':
 			if recorder:
-				recorder.start_hum()
-			print('> start humming')
+				recorder.start_hum('start_question')
+			print('> start quest. hum')
+			humming = True
+		if not humming and key.char == '4':
+			if recorder:
+				recorder.start_hum('start_positive')
+			print('> start pos. hum')
+			humming = True
+		if not humming and key.char == '5':
+			if recorder:
+				recorder.start_hum('start_negative')
+			print('> start neg. hum')
+			humming = True
+		if not humming and key.char == '6':
+			if recorder:
+				recorder.start_hum('start_continuous')
+			print('> start cont. hum')
 			humming = True
 	except:
 		pass
@@ -145,17 +160,18 @@ def on_release(key) -> bool:
 		return False # stop listening
 	try:
 		global humming
-		if key.char == '3' and humming:
-				if recorder:
-					recorder.stop_hum()
-				print('> stop humming')
-				humming = False
+		if humming and key.char == '3' or key.char == '4' or key.char == '5' or key.char == '6':
+			humming = False
+			if humming <= 0 and recorder:
+				print('> stop hum')
+				recorder.stop_hum()
 	except:
 		pass
 	return True # continue listening
 
 # Recording mode
-print('Record: <ESC> exit, <1> start, <2> stop, <3> humming (pressing)')
+print('Record: <ESC> exit, <1> begin record, <2> stop record')
+print('<3> quest. hum, <4> pos. hum, <5> neg. hum, <6> cont. hum')
 
 # Initialize actual keyboard listener
 listener = keyboard.Listener(
