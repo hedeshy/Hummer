@@ -11,6 +11,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_validate
 from sklearn.metrics import classification_report
 from sklearn.metrics import recall_score
+from sklearn import decomposition
 from imblearn.over_sampling import SMOTE
 from joblib import dump
 from os import listdir
@@ -125,9 +126,14 @@ for f in files:
 data: np.array = np.array(data)
 target: np.array = np.array(target)
 
-# Resample the dataset (TODO: reintegrate)
-# sm = SMOTE(random_state=42, sampling_strategy='not majority')
-# data, target = sm.fit_resample(data, target)
+# TODO: PCA to reduce dimensions (results get worse)
+# pca = decomposition.PCA(n_components=5)
+# pca.fit(data)
+# data = pca.transform(data) # TODO: store PCA such that at recognition the same PCA can be applied
+
+# Resample the dataset to remove imbalance
+sm = SMOTE(random_state=42, sampling_strategy='not majority')
+data, target = sm.fit_resample(data, target)
 
 # Random Forest
 clf = RandomForestClassifier(
