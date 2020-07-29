@@ -36,7 +36,6 @@ class Recorder:
 
 		# Store audio as wave
 		data = np.frombuffer(bytes(itertools.chain(*self._data)), dtype=np.float32)
-		print(data.shape)
 		wavfile.write(self._name + '.wav', self._rate, data)
 
 		# Store meta data as json
