@@ -15,6 +15,7 @@ librosa = "*"
 numba = "==0.48"
 websockets = "*"
 pyinstaller = "*"
+scipy = "*"
 
 [requires]
 python_version = "3.8"
