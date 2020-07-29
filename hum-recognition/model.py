@@ -26,7 +26,7 @@ DATA_PATH: str = r'./data'
 TMP_PATH: str = r'./tmp'
 SEGMENT_WIDTH_S: float = 1.0
 SEGMENT_STEP_S: float = 0.1
-RATIO_OF_HUM: float = 0.5 # at least 50% of segment must contain humming to be labeled as not 'none'
+RATIO_OF_HUM: float = 0.25 # at least 50% of segment must contain humming to be labeled as not 'none'
 EVALUATION_FOLDS: int = 5
 
 def compute_overlap(a, b):
@@ -142,14 +142,14 @@ target: np.array = np.array(target)
 # data = pca.transform(data) # TODO: store PCA such that at recognition the same PCA can be applied
 
 # Resample the dataset to remove imbalance TODO: reintegrate (maybe not enough sample data) and remember to set class_weight attribute in forest
-# sm = SMOTE(random_state=42, sampling_strategy='not majority')
-# data, target = sm.fit_resample(data, target)
+sm = SMOTE(random_state=42, sampling_strategy='not majority')
+data, target = sm.fit_resample(data, target)
 
 # Random Forest
 clf = RandomForestClassifier(
 	random_state=42,
 	n_estimators=100,
-	class_weight='balanced', # None, 'balanced_subsample'
+	class_weight=None, # 'balanced', 'balanced_subsample'
 	criterion='entropy', # 'gini'
 	max_depth=None,
 	min_samples_split=2,

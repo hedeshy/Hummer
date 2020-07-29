@@ -14,10 +14,10 @@ SEGMENT_WIDTH_S = 1.0 # limits the "length" of humming
 class Recognizer:
 
 	def _callback(self, indata, frames: int, time: dict, status: int) -> None:
-		npdata = librosa.util.buf_to_float(indata, n_bytes=2, dtype=np.float32) # int16 to float32
+		data = np.frombuffer(indata, dtype=np.float32)
 
 		# Process audio to window length
-		self._segment = np.append(self._segment, npdata)
+		self._segment = np.append(self._segment, data)
 		sample_count: int = self._segment.shape[0]
 		max_sample_count: int = SEGMENT_WIDTH_S * self._rate * self._channels
 		count: int = int(min(sample_count, max_sample_count))
@@ -25,14 +25,14 @@ class Recognizer:
 		y: np.ndarray = librosa.to_mono(self._segment)
 
 		# Compute features
-		sr: int = self._rate
-		seg = common.compute_feature_vector(y, sr)
+		seg = common.compute_feature_vector(y, self._rate)
 
 		# TODO: No scaling performed as the model does not do any scaling, too
 		
 		# Classify whether humming or not
 		pred = self._model.predict(np.array([seg])).astype(int)
 		self._humming = pred[0]
+		print(pred)
 
 	def stop(self) -> None:
 		self._stream.stop()
@@ -43,10 +43,10 @@ class Recognizer:
 		# Initialize members
 		host_info: dict = sd.query_hostapis(index=None)[0]
 		device_info: dict = sd.query_devices(device=host_info['default_input_device'])
-		self._channels: int = int(device_info['max_input_channels'])
+		self._channels: int = 1 # int(device_info['max_input_channels'])
 		self._rate: int = int(device_info['default_samplerate'])
 		self._segment: np.array = np.empty(1)
-		self._dtype: str = 'int16'
+		self._dtype: str = 'float32'
 		self._model: RandomForestClassifier = model
 		self._humming: int = 0
 
