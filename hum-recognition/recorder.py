@@ -56,7 +56,7 @@ class Recorder:
 		host_info: dict = sd.query_hostapis(index=None)[0]
 		device_info: dict = sd.query_devices(device=host_info['default_input_device'])
 		self._channels: int = 1 # only record mono for now, otherwise scipy input ata must be reshaped. int(device_info['max_input_channels'])
-		self._rate: int = int(device_info['default_samplerate'])
+		self._rate: int = 44000 # int(device_info['default_samplerate'])
 		self._data: List[bytes] = []
 		self._dtype: str = 'float32'
 		self._humming_events: List[(int, str)] = []

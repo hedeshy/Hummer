@@ -53,7 +53,7 @@ class Recognizer:
 		host_info: dict = sd.query_hostapis(index=None)[0]
 		device_info: dict = sd.query_devices(device=host_info['default_input_device'])
 		self._channels: int = 1 # int(device_info['max_input_channels'])
-		self._rate: int = 44100 # int(device_info['default_samplerate'])
+		self._rate: int = 44000 # int(device_info['default_samplerate'])
 		self._segment: np.array = np.empty(1)
 		self._dtype: str = 'float32'
 		self._model: RandomForestClassifier = model
