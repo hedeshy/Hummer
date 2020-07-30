@@ -154,12 +154,13 @@ for f in files:
 data: np.array = np.array(data)
 target: np.array = np.array(target)
 
-print('Data shape: ' + str(data.shape))
+print('> Data shape: ' + str(data.shape))
 
 # TODO: PCA to reduce dimensions (results get worse)
 pca = decomposition.PCA(n_components=25)
 pca.fit(data)
 dump(pca, 'pca.joblib')
+print('> PCA stored')
 data = pca.transform(data)
 
 # Resample the dataset to remove imbalance TODO: reintegrate (maybe not enough sample data) and remember to set class_weight attribute in forest
@@ -176,12 +177,6 @@ clf = RandomForestClassifier(
 	min_samples_split=2,
 	min_samples_leaf=1)
 
-# Perform cross validation and report results
-scoring = ['precision_macro', 'recall_macro']
-scores = cross_validate(clf, data, target, scoring=scoring, cv=EVALUATION_FOLDS)
-print('Recall (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_recall_macro'])))
-print('Precision (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_precision_macro'])))
-
 # Scale data (TODO: also scale data for the cross validation, but use a pipeline instead)
 # scaler = StandardScaler()
 # scaler.fit(data)
@@ -191,8 +186,15 @@ print('Precision (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(score
 # Store model trained by entire data to be used for interaction
 clf.fit(data, target)
 dump(clf, 'model.joblib')
-print(classification_report(target, clf.predict(data), target_names=common.labels))
+print('> Model stored')
+# print(classification_report(target, clf.predict(data), target_names=common.labels))
 
 # TODO: decide which features are important (maybe apply PCA)
-importances = clf.feature_importances_
-print(importances)
+# importances = clf.feature_importances_
+# print(importances)
+
+# Perform cross validation and report results
+scoring = ['precision_macro', 'recall_macro']
+scores = cross_validate(clf, data, target, scoring=scoring, cv=EVALUATION_FOLDS)
+print('> Recall (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_recall_macro'])))
+print('> Precision (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_precision_macro'])))

@@ -40,8 +40,8 @@ class Recognizer:
 		# TODO: No scaling performed as the model does not do any scaling, too
 		fts = self._pca.transform(fts)
 		pred = self._model.predict(fts).astype(int)
-		self._humming = pred[0]
-		print(common.labels[self._humming])
+		self._humming = common.labels[pred[0]]
+		print(self._humming)
 
 	def stop(self) -> None:
 		self._stream.stop()
@@ -58,13 +58,13 @@ class Recognizer:
 		self._dtype: str = 'float32'
 		self._model: RandomForestClassifier = model
 		self._pca: PCA = pca
-		self._humming: int = 0
+		self._humming: str = common.labels[0]
 
 		# Create stream
 		self._stream = sd.RawInputStream(
 				device=host_info['default_input_device'],
 				dtype=self._dtype,
-				# blocksize=32,
+				# blocksize=2000,
 				channels=self._channels,
 				samplerate=self._rate,
 				callback=self._callback)
@@ -78,7 +78,7 @@ recognizer = Recognizer(model, pca)
 
 async def send(websocket, path):
 	while True:
-		await websocket.send(str(recognizer._humming))
+		await websocket.send(recognizer._humming)
 		await asyncio.sleep(1) # would be better to send when new computation is available
 
 start_server = websockets.serve(send, "127.0.0.1", 5678)
