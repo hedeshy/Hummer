@@ -154,10 +154,10 @@ for f in files:
 data: np.array = np.array(data)
 target: np.array = np.array(target)
 
-print(data.shape)
+print('Data shape: ' + str(data.shape))
 
 # TODO: PCA to reduce dimensions (results get worse)
-pca = decomposition.PCA(n_components=40)
+pca = decomposition.PCA(n_components=25)
 pca.fit(data)
 dump(pca, 'pca.joblib')
 data = pca.transform(data)

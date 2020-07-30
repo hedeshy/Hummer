@@ -29,8 +29,8 @@ def compute_feature_vector(y: np.array, sr: int) -> List[float]:
 	return seg
 
 	'''
-
-	bin_count: int = 100
+	
+	bin_count: int = 10
 	total_count = y.shape[0]
 	window_count = int(total_count / bin_count)
 	# Assumption: total_count % bin_count = 0
@@ -43,9 +43,9 @@ def compute_feature_vector(y: np.array, sr: int) -> List[float]:
 		bin: np.array = y[start_idx:end_idx]
 		A = np.fft.fft(bin)
 		amps = np.abs(A)
-		phas = np.angle(A)
+		# phas = np.angle(A)
+		# fts = np.append(fts, amps)
 		fts = np.append(fts, amps)
-		fts = np.append(fts, phas)
 
 	return list(fts)
 
