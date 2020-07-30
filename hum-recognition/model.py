@@ -114,11 +114,12 @@ for f in files:
 	# Go over mono data and split into segments
 	pos_s = 0.0
 	i: int = 0
+	window_sample_count: int = int(SEGMENT_WIDTH_S * sr)
 	while pos_s + SEGMENT_WIDTH_S <= length_s:
 		
 		# Get audio segment
 		start_idx: int = int(pos_s * sr)
-		end_idx: int = int((pos_s + SEGMENT_WIDTH_S) * sr) - 1
+		end_idx: int = start_idx + window_sample_count
 		y: np.array = x_mono[start_idx:end_idx]
 
 		# Compute feature vector
@@ -153,10 +154,13 @@ for f in files:
 data: np.array = np.array(data)
 target: np.array = np.array(target)
 
+print(data.shape)
+
 # TODO: PCA to reduce dimensions (results get worse)
-# pca = decomposition.PCA(n_components=5)
-# pca.fit(data)
-# data = pca.transform(data) # TODO: store PCA such that at recognition the same PCA can be applied
+pca = decomposition.PCA(n_components=40)
+pca.fit(data)
+dump(pca, 'pca.joblib')
+data = pca.transform(data)
 
 # Resample the dataset to remove imbalance TODO: reintegrate (maybe not enough sample data) and remember to set class_weight attribute in forest
 sm = SMOTE(random_state=42, sampling_strategy='not majority')

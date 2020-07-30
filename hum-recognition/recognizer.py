@@ -4,6 +4,7 @@ import common
 # Other
 import websockets
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.decomposition import PCA
 from joblib import load
 import sounddevice as sd
 import librosa
@@ -24,9 +25,9 @@ class Recognizer:
 		sample_count: int = self._segment.shape[0]
 		window_sample_count: int = SEGMENT_WIDTH_S * self._rate * self._channels
 
-		# For now, only consider windows of full length
-		# if sample_count < window_sample_count:
-		# 	return
+		# For now, only consider windows of full length (otherswise pca and model breaks as feature count is different than expected)
+		if sample_count < window_sample_count:
+			return
 
 		# Make window
 		count: int = int(min(sample_count, window_sample_count))
@@ -34,12 +35,11 @@ class Recognizer:
 		y: np.ndarray = librosa.to_mono(self._segment)
 
 		# Compute features
-		seg = common.compute_feature_vector(y, self._rate)
+		fts = np.array([common.compute_feature_vector(y, self._rate)])
 
 		# TODO: No scaling performed as the model does not do any scaling, too
-		
-		# Classify whether humming or not
-		pred = self._model.predict(np.array([seg])).astype(int)
+		fts = self._pca.transform(fts)
+		pred = self._model.predict(fts).astype(int)
 		self._humming = pred[0]
 		print(pred)
 
@@ -47,16 +47,17 @@ class Recognizer:
 		self._stream.stop()
 		self._stream.close()
 
-	def __init__(self, model: RandomForestClassifier):
+	def __init__(self, model: RandomForestClassifier, pca: PCA):
 
 		# Initialize members
 		host_info: dict = sd.query_hostapis(index=None)[0]
 		device_info: dict = sd.query_devices(device=host_info['default_input_device'])
 		self._channels: int = 1 # int(device_info['max_input_channels'])
-		self._rate: int = int(device_info['default_samplerate'])
+		self._rate: int = 44100 # int(device_info['default_samplerate'])
 		self._segment: np.array = np.empty(1)
 		self._dtype: str = 'float32'
 		self._model: RandomForestClassifier = model
+		self._pca: PCA = pca
 		self._humming: int = 0
 
 		# Create stream
@@ -72,7 +73,8 @@ class Recognizer:
 		print('> start recognizing ' + device_info['name'])
 
 model: RandomForestClassifier = load('model.joblib')
-recognizer = Recognizer(model)
+pca: PCA = load('pca.joblib')
+recognizer = Recognizer(model, pca)
 
 async def send(websocket, path):
 	while True:
