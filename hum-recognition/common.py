@@ -1,6 +1,7 @@
 import numpy as np
 import librosa
 from typing import List
+from collections import OrderedDict
 
 def compute_feature_vector(y: np.array, sr: int) -> List[float]:
 	# Compute features
@@ -24,3 +25,7 @@ def compute_feature_vector(y: np.array, sr: int) -> List[float]:
 		seg.append(np.mean(e))
 
 	return seg
+
+labels: List[str] = 'none', 'question', 'positive', 'negative', 'continuous'
+def label_int(label: str) -> int:
+	return labels.index(label)

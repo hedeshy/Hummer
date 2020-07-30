@@ -34,7 +34,7 @@ class Recorder:
 		print('> stop recording')
 		# duration: int = self._end_ms - self._start_ms
 
-		# Store audio as wave
+		# Store audio data as wave
 		data = np.frombuffer(bytes(itertools.chain(*self._data)), dtype=np.float32)
 		wavfile.write(self._name + '.wav', self._rate, data)
 
@@ -55,7 +55,7 @@ class Recorder:
 		self._name = name
 		host_info: dict = sd.query_hostapis(index=None)[0]
 		device_info: dict = sd.query_devices(device=host_info['default_input_device'])
-		self._channels: int = 1 # only record mono for now, otherwise scipy input must be reshaped. int(device_info['max_input_channels'])
+		self._channels: int = 1 # only record mono for now, otherwise scipy input ata must be reshaped. int(device_info['max_input_channels'])
 		self._rate: int = int(device_info['default_samplerate'])
 		self._data: List[bytes] = []
 		self._dtype: str = 'float32'
@@ -83,7 +83,7 @@ count: int = 0
 start: bool = False
 stop: bool = False
 escape: bool = False
-humming: bool = False # true if there is any humming
+humming: bool = False # true if there is any humming going on
 
 # On key press event for name entering
 def on_press_name(key) -> bool:
@@ -109,6 +109,7 @@ listener = keyboard.Listener(
 	suppress=True)
 listener.start()
 
+# Loop to enter name
 while not name_entered:
 	time.sleep(0.05)
 listener.stop()
@@ -122,7 +123,7 @@ def on_press(key) -> bool:
 		if key.char == '2':
 			global stop
 			stop = True
-		global humming
+		global humming # global indicator whether humming is going on
 		if not humming and key.char == '3':
 			if recorder:
 				recorder.start_hum('start_question')

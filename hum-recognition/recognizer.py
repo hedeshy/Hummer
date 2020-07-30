@@ -1,3 +1,8 @@
+# Custom
+import common
+
+# Other
+import websockets
 from sklearn.ensemble import RandomForestClassifier
 from joblib import load
 import sounddevice as sd
@@ -6,8 +11,6 @@ import numpy as np
 import asyncio
 import datetime
 import random
-import websockets
-import common
 
 SEGMENT_WIDTH_S = 1.0 # limits the "length" of humming
 
@@ -17,11 +20,17 @@ class Recognizer:
 		data = np.frombuffer(indata, dtype=np.float32)
 
 		# Process audio to window length
-		self._segment = np.append(self._segment, data)
+		self._segment = np.append(self._segment, data) # copies array
 		sample_count: int = self._segment.shape[0]
-		max_sample_count: int = SEGMENT_WIDTH_S * self._rate * self._channels
-		count: int = int(min(sample_count, max_sample_count))
-		self._segment = self._segment[-count:]
+		window_sample_count: int = SEGMENT_WIDTH_S * self._rate * self._channels
+
+		# For now, only consider windows of full length
+		# if sample_count < window_sample_count:
+		# 	return
+
+		# Make window
+		count: int = int(min(sample_count, window_sample_count))
+		self._segment = self._segment[-count:] # take latest samples as window
 		y: np.ndarray = librosa.to_mono(self._segment)
 
 		# Compute features
@@ -54,7 +63,7 @@ class Recognizer:
 		self._stream = sd.RawInputStream(
 				device=host_info['default_input_device'],
 				dtype=self._dtype,
-				# blocksize=32,
+				blocksize=32,
 				channels=self._channels,
 				samplerate=self._rate,
 				callback=self._callback)

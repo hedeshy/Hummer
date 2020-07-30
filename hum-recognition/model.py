@@ -1,11 +1,19 @@
+# Custom
+import common
+
+# Audio processing
 import librosa
 import librosa.display
-import json
 import matplotlib.pyplot as plt
 import numpy as np
+
+# Typing
 from typing import List
 from typing import Tuple
 from typing import Set
+from typing import NamedTuple
+
+# Sklearn
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_validate
@@ -14,11 +22,13 @@ from sklearn.metrics import recall_score
 from sklearn import decomposition
 from imblearn.over_sampling import SMOTE
 from joblib import dump
+
+# Standard
 from os import listdir
 from os.path import isfile, join, splitext
-import common
 from collections import defaultdict
-from collections import OrderedDict
+from collections import namedtuple
+import json
 
 # Inspiration: https://www.kdnuggets.com/2020/02/audio-data-analysis-deep-learning-python-part-1.html
 
@@ -26,9 +36,10 @@ DATA_PATH: str = r'./data'
 TMP_PATH: str = r'./tmp'
 SEGMENT_WIDTH_S: float = 1.0
 SEGMENT_STEP_S: float = 0.1
-RATIO_OF_HUM: float = 0.25 # at least 50% of segment must contain humming to be labeled as not 'none'
+RATIO_OF_HUM: float = 0.25 # at least 25% of segment must contain humming to be labeled as not 'none'
 EVALUATION_FOLDS: int = 5
 
+# Computes overlap of two intervals
 def compute_overlap(a, b):
 	return max(0, min(a[1], b[1]) - max(a[0], b[0]))
 
@@ -63,36 +74,42 @@ for f in files:
 
 	# print(meta['hums'])
 
-	# Map from class name to class number
-	class_name_to_int: OrderedDict = OrderedDict([ ('none', 0), ('question', 1), ('positive', 2), ('negative', 3), ('continuous', 4)])
-
 	# Collect hums into starts and ends
-	hum_starts_ms: List[Tuple[int,int]] = [] # tuple of start and class
+	hum_starts_ms: List[int] = []
 	hum_ends_ms: List[int] = []
-	for ts, state in meta['hums']:
-		if state == 'end':
+	hum_labels: List[int] = []
+	for ts, event in meta['hums']:
+		if event == 'end':
 			hum_ends_ms.append(ts)
 		else:
-			hum_starts_ms.append((ts, class_name_to_int[state[6:]]))
-	# Above assumes that states are ordered correctly in the json (should be the case)
+			hum_starts_ms.append(ts)
+			hum_labels.append(common.label_int(event[6:]))
+	# Above assumes that events are ordered correctly in the json (should be the case)
 
-	# Go over hums and make triples of start and end and class integer (to be checked by later segments for intersection)
-	hums_ms: List[Tuple[int,int,int]] = []
-	if hum_starts_ms and hum_ends_ms:
+	# Go over hums and make triples of start and end and label indicator
+	class Hum(NamedTuple):
+		start_ms: int
+		end_ms: int
+		label: int
+
+	hums: List[Hum] = []
+	if hum_starts_ms and hum_ends_ms and hum_labels:
 
 		# Check if there is an end before the first start and remove that end
 		# if hum_ends_ms[0] < hum_starts_ms[0]:
 		# 	hum_starts_ms.insert(0,0) # Issue: not sure which class of humming is ended here / no info in the data
 
-		for start_ms_class in hum_starts_ms:
+		# Iterate over starts and find corresponding ends
+		for i in range(len(hum_starts_ms)):
+			start_ms = hum_starts_ms[i]
 			success: bool = False # succes in finding an end
 			for end_ms in hum_ends_ms:
-				if end_ms > start_ms_class[0]:
+				if end_ms > start_ms:
 					success = True
-					hums_ms.append((start_ms_class[0],end_ms,start_ms_class[1]))
+					hums.append(Hum(start_ms, end_ms, hum_labels[i]))
 					break
 			if not success:
-				hums_ms.append(start_ms_class[0], int(length_s*1000), start_ms_class[1]) # just assume the end of the recording as end
+				hums.append(Hum(start_ms, int(length_s*1000), hum_labels[i])) # just assume the end of the recording as end
 
 	# Go over mono data and split into segments
 	pos_s = 0.0
@@ -108,20 +125,20 @@ for f in files:
 		data.append(common.compute_feature_vector(y, sr))
 
 		# Compute label
-		label: int = 0 # no humming
+		label: int = 0
 		start_ms: int = int(1000 * (start_idx / sr))
 		end_ms: int = int(1000 * (end_idx / sr))
-		overlap: defaultdict = defaultdict(int)
-		for hum_ms in hums_ms:
-			overlap[str(hum_ms[2])] += compute_overlap((start_ms, end_ms),(hum_ms[0],hum_ms[1]))
-		class_overlap: int = 0
-		class_int: int = 0
-		for key, value in overlap.items(): # get most overlapping humming class
-			if value > class_overlap:
-				class_overlap = value
-				class_int = key
-		if float(class_overlap) / (SEGMENT_WIDTH_S*1000) >= RATIO_OF_HUM:
-			label = class_int # humming
+		overlaps: defaultdict = defaultdict(int) # start for every counting at zero
+		for hum in hums:
+			overlaps[str(hum.label)] += compute_overlap((start_ms, end_ms), (hum.start_ms, hum.end_ms))
+		overlap: int = 0
+		potential_label: int = 0
+		for key, value in overlaps.items(): # get most overlapping humming label
+			if value > overlap:
+				overlap = value
+				potential_label = int(key)
+		if float(overlap) / (SEGMENT_WIDTH_S*1000) >= RATIO_OF_HUM:
+			label = potential_label # humming
 		target.append(label)
 
 		# Prepare next iteration
@@ -170,7 +187,7 @@ print('Precision (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(score
 # Store model trained by entire data to be used for interaction
 clf.fit(data, target)
 dump(clf, 'model.joblib')
-print(classification_report(target, clf.predict(data), target_names=class_name_to_int.keys()))
+print(classification_report(target, clf.predict(data), target_names=common.labels))
 
 # TODO: decide which features are important (maybe apply PCA)
 importances = clf.feature_importances_
