@@ -35,9 +35,9 @@ import json
 
 DATA_PATH: str = r'./data'
 TMP_PATH: str = r'./tmp'
-SEGMENT_WIDTH_S: float = 1.0
-SEGMENT_STEP_S: float = 0.1
-RATIO_OF_HUM: float = 0.25 # at least 25% of segment must contain humming to be labeled as not 'none'
+SEGMENT_WIDTH_S: float = 0.5
+SEGMENT_STEP_S: float = 0.01
+RATIO_OF_HUM: float = 0.5 # at least 50% of segment must contain humming to be labeled as not 'none'
 EVALUATION_FOLDS: int = 5
 
 # Computes overlap of two intervals
@@ -198,7 +198,7 @@ print('> Model stored')
 # print(importances)
 
 # Perform cross validation and report results
-scoring = ['precision_macro', 'recall_macro']
-scores = cross_validate(clf, data, target, scoring=scoring, cv=EVALUATION_FOLDS)
-print('> Recall (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_recall_macro'])))
-print('> Precision (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_precision_macro'])))
+# scoring = ['precision_macro', 'recall_macro']
+# scores = cross_validate(clf, data, target, scoring=scoring, cv=EVALUATION_FOLDS)
+# print('> Recall (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_recall_macro'])))
+# print('> Precision (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_precision_macro'])))

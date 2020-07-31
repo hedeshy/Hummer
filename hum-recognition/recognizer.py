@@ -14,7 +14,7 @@ import asyncio
 import datetime
 import random
 
-SEGMENT_WIDTH_S = 1.0 # limits the "length" of humming
+SEGMENT_WIDTH_S = 0.5 # limits the "length" of humming
 
 class Recognizer:
 
