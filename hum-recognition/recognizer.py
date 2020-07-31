@@ -4,6 +4,7 @@ import common
 # Other
 import websockets
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.decomposition import PCA
 from joblib import load
 import sounddevice as sd
@@ -47,7 +48,7 @@ class Recognizer:
 		self._stream.stop()
 		self._stream.close()
 
-	def __init__(self, model: RandomForestClassifier, pca: PCA):
+	def __init__(self, model, pca: PCA):
 
 		# Initialize members
 		host_info: dict = sd.query_hostapis(index=None)[0]
@@ -56,7 +57,7 @@ class Recognizer:
 		self._rate: int = 44000 # int(device_info['default_samplerate'])
 		self._segment: np.array = np.empty(1)
 		self._dtype: str = 'float32'
-		self._model: RandomForestClassifier = model
+		self._model = model
 		self._pca: PCA = pca
 		self._humming: str = common.labels[0]
 
@@ -72,7 +73,7 @@ class Recognizer:
 
 		print('> start recognizing ' + device_info['name'])
 
-model: RandomForestClassifier = load('model.joblib')
+model = load('model.joblib')
 pca: PCA = load('pca.joblib')
 recognizer = Recognizer(model, pca)
 

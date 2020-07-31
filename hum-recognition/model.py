@@ -16,6 +16,7 @@ from typing import NamedTuple
 # Sklearn
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import cross_validate
 from sklearn.metrics import classification_report
 from sklearn.metrics import recall_score
@@ -176,6 +177,9 @@ clf = RandomForestClassifier(
 	max_depth=None,
 	min_samples_split=2,
 	min_samples_leaf=1)
+
+# Gradient Boosting
+# clf = GradientBoostingClassifier(random_state=42)
 
 # Scale data (TODO: also scale data for the cross validation, but use a pipeline instead)
 # scaler = StandardScaler()
