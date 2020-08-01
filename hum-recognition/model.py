@@ -16,11 +16,11 @@ from typing import NamedTuple
 # Sklearn
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import cross_validate
+from sklearn.pipeline import Pipeline
 from sklearn.metrics import classification_report
 from sklearn.metrics import recall_score
-from sklearn import decomposition
+from sklearn.decomposition import PCA
 from imblearn.over_sampling import SMOTE
 from joblib import dump
 
@@ -157,18 +157,56 @@ target: np.array = np.array(target)
 
 print('> Data shape: ' + str(data.shape))
 
-# TODO: PCA to reduce dimensions (results get worse)
-pca = decomposition.PCA(n_components=25)
+# Perform PCA on entire dataset
+# Otherwise, too much data in the remaining operations
+pca = PCA(n_components=25)
 pca.fit(data)
 dump(pca, 'pca.joblib')
 print('> PCA stored')
 data = pca.transform(data)
 
+print('> Data shape after PCA: ' + str(data.shape))
+
 # Resample the dataset to remove imbalance TODO: reintegrate (maybe not enough sample data) and remember to set class_weight attribute in forest
 sm = SMOTE(random_state=42, sampling_strategy='not majority')
 data, target = sm.fit_resample(data, target)
 
-# Random Forest
+print('> Data shape after SMOTE: ' + str(data.shape))
+
+# Pipeline for cross-validation
+estimators = [
+	# ('pca', PCA()),
+	('clf', RandomForestClassifier())]
+pipe = Pipeline(estimators)
+# pipe.set_params(pca__n_components=25)
+pipe.set_params(clf__random_state=42)
+pipe.set_params(clf__n_estimators=100)
+pipe.set_params(clf__class_weight=None)
+pipe.set_params(clf__criterion='entropy')
+pipe.set_params(clf__max_depth=None)
+pipe.set_params(clf__min_samples_split=2)
+pipe.set_params(clf__min_samples_leaf=1)
+
+# Perform cross-validation
+print('> Performing cross-validation')
+scores = cross_validate(
+	pipe,
+	data,
+	target,
+	scoring=['precision_macro', 'recall_macro'],
+	cv=EVALUATION_FOLDS,
+	n_jobs=-1,
+	verbose=True)
+print('> Recall (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_recall_macro'])))
+print('> Precision (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_precision_macro'])))
+
+# Scale data (TODO: also scale data for the cross validation, but use a pipeline instead)
+# scaler = StandardScaler()
+# scaler.fit(data)
+# data = scaler.transform(data)
+# Note: results without scaling look better... (scaling not required for random forest)
+
+# Create classifier on the entire dataset
 clf = RandomForestClassifier(
 	random_state=42,
 	n_estimators=100,
@@ -177,28 +215,7 @@ clf = RandomForestClassifier(
 	max_depth=None,
 	min_samples_split=2,
 	min_samples_leaf=1)
-
-# Gradient Boosting
-# clf = GradientBoostingClassifier(random_state=42)
-
-# Scale data (TODO: also scale data for the cross validation, but use a pipeline instead)
-# scaler = StandardScaler()
-# scaler.fit(data)
-# data = scaler.transform(data)
-# Note: results without scaling look better... (scaling not required for random forest)
-
-# Store model trained by entire data to be used for interaction
 clf.fit(data, target)
 dump(clf, 'model.joblib')
 print('> Model stored')
 # print(classification_report(target, clf.predict(data), target_names=common.labels))
-
-# TODO: decide which features are important (maybe apply PCA)
-# importances = clf.feature_importances_
-# print(importances)
-
-# Perform cross validation and report results
-# scoring = ['precision_macro', 'recall_macro']
-# scores = cross_validate(clf, data, target, scoring=scoring, cv=EVALUATION_FOLDS)
-# print('> Recall (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_recall_macro'])))
-# print('> Precision (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_precision_macro'])))
