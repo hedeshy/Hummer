@@ -17,11 +17,12 @@ from typing import NamedTuple
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_validate
-from sklearn.pipeline import Pipeline
 from sklearn.metrics import classification_report
 from sklearn.metrics import recall_score
 from sklearn.decomposition import PCA
 from imblearn.over_sampling import SMOTE
+from imblearn.pipeline import Pipeline
+from sklearn.model_selection import GridSearchCV
 from joblib import dump
 
 # Standard
@@ -157,6 +158,60 @@ target: np.array = np.array(target)
 
 print('> Data shape: ' + str(data.shape))
 
+# Decode on parameters to tune
+tuned_parameters = [{'pca__n_components': [20, 25, 30, 35]}, {'clf__n_estimators': [75, 100, 125]}]
+estimators = [
+	('pca', PCA()),
+	('smote', SMOTE()),
+	('clf', RandomForestClassifier())]
+
+pipe = Pipeline(estimators)
+# pipe.set_params(pca__n_components=25) # tuned
+pipe.set_params(smote__random_state=42)
+pipe.set_params(smote__sampling_strategy='not majority')
+pipe.set_params(clf__min_samples_leaf=1)
+pipe.set_params(clf__random_state=42)
+# pipe.set_params(clf__n_estimators=100) # tuned
+pipe.set_params(clf__class_weight=None)
+pipe.set_params(clf__criterion='entropy')
+pipe.set_params(clf__max_depth=None)
+pipe.set_params(clf__min_samples_split=2)
+pipe.set_params(clf__min_samples_leaf=1)
+
+clf = GridSearchCV(
+	pipe,
+	tuned_parameters,
+	scoring='precision_macro',
+	cv=EVALUATION_FOLDS,
+#	n_jobs=-1
+	)
+clf.fit(data, target)
+
+print("Best parameters set found on development set:")
+print()
+print(clf.best_params_)
+print()
+print("Grid scores on development set:")
+print()
+means = clf.cv_results_['mean_test_score']
+stds = clf.cv_results_['std_test_score']
+for mean, std, params in zip(means, stds, clf.cv_results_['params']):
+	print("%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
+print()
+
+# print("Detailed classification report:")
+# print()
+# print("The model is trained on the full development set.")
+# print("The scores are computed on the full evaluation set.")
+# print()
+# y_true, y_pred = y_test, clf.predict(X_test)
+# print(classification_report(y_true, y_pred))
+# print()
+
+
+
+
+
 # Perform PCA on entire dataset
 # Otherwise, too much data in the remaining operations
 pca = PCA(n_components=25)
@@ -164,38 +219,32 @@ pca.fit(data)
 dump(pca, 'pca.joblib')
 print('> PCA stored')
 data = pca.transform(data)
-
 print('> Data shape after PCA: ' + str(data.shape))
 
 # Resample the dataset to remove imbalance TODO: reintegrate (maybe not enough sample data) and remember to set class_weight attribute in forest
 sm = SMOTE(random_state=42, sampling_strategy='not majority')
 data, target = sm.fit_resample(data, target)
-
 print('> Data shape after SMOTE: ' + str(data.shape))
 
-# Pipeline for cross-validation
-estimators = [
-	# ('pca', PCA()),
-	('clf', RandomForestClassifier())]
-pipe = Pipeline(estimators)
-# pipe.set_params(pca__n_components=25)
-pipe.set_params(clf__random_state=42)
-pipe.set_params(clf__n_estimators=100)
-pipe.set_params(clf__class_weight=None)
-pipe.set_params(clf__criterion='entropy')
-pipe.set_params(clf__max_depth=None)
-pipe.set_params(clf__min_samples_split=2)
-pipe.set_params(clf__min_samples_leaf=1)
+# Create classifier
+clf = RandomForestClassifier(
+	random_state=42,
+	n_estimators=100,
+	class_weight=None, # 'balanced', 'balanced_subsample'
+	criterion='entropy', # 'gini'
+	max_depth=None,
+	min_samples_split=2,
+	min_samples_leaf=1)
 
 # Perform cross-validation
 print('> Performing cross-validation')
 scores = cross_validate(
-	pipe,
+	clf,
 	data,
 	target,
 	scoring=['precision_macro', 'recall_macro'],
 	cv=EVALUATION_FOLDS,
-	n_jobs=-1,
+	# n_jobs=-1,
 	verbose=True)
 print('> Recall (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_recall_macro'])))
 print('> Precision (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_precision_macro'])))
@@ -206,15 +255,7 @@ print('> Precision (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(sco
 # data = scaler.transform(data)
 # Note: results without scaling look better... (scaling not required for random forest)
 
-# Create classifier on the entire dataset
-clf = RandomForestClassifier(
-	random_state=42,
-	n_estimators=100,
-	class_weight=None, # 'balanced', 'balanced_subsample'
-	criterion='entropy', # 'gini'
-	max_depth=None,
-	min_samples_split=2,
-	min_samples_leaf=1)
+# Fit classifier on the entire dataset
 clf.fit(data, target)
 dump(clf, 'model.joblib')
 print('> Model stored')
