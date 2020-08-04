@@ -65,7 +65,7 @@ class Recognizer:
 		self._stream = sd.RawInputStream(
 				device=host_info['default_input_device'],
 				dtype=self._dtype,
-				# blocksize=2000,
+				blocksize=11000,
 				channels=self._channels,
 				samplerate=self._rate,
 				callback=self._callback)

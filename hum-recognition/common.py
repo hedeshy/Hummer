@@ -41,11 +41,37 @@ def compute_feature_vector(y: np.array, sr: int) -> List[float]:
 	for i in range(0, bin_count):
 		start_idx: int = i * window_count
 		end_idx: int = (i + 1) * window_count
-		signal: np.array = y[start_idx:end_idx]
-		A = np.fft.fft(signal)
-		amps = np.abs(A)
+		b: np.array = y[start_idx:end_idx]
+		rmse = librosa.feature.rms(y=b)[0]
+		chroma_stft = librosa.feature.chroma_stft(y=b, sr=sr)
+		chroma_cqt = librosa.feature.chroma_cqt(y=b, sr=sr)
+		spec_cent = librosa.feature.spectral_centroid(y=b, sr=sr)
+		spec_bw = librosa.feature.spectral_bandwidth(y=b, sr=sr)
+		rolloff = librosa.feature.spectral_rolloff(y=b, sr=sr)
+		contrast = librosa.feature.spectral_contrast(y=b, sr=sr)
+		flatness = librosa.feature.spectral_flatness(y=b)
+		zcr = librosa.feature.zero_crossing_rate(b)
+		mfcc = librosa.feature.mfcc(y=b, sr=sr)
+
+		# Fill feature vector
+		seg = []
+		seg.append(np.mean(chroma_stft))
+		seg.append(np.mean(chroma_cqt))
+		seg.append(np.mean(rmse))
+		seg.append(np.mean(spec_cent))
+		seg.append(np.mean(spec_bw))
+		seg.append(np.mean(rolloff))
+		seg.append(np.mean(contrast))
+		seg.append(np.mean(flatness))
+		seg.append(np.mean(zcr))
+		for e in mfcc: # 20 features
+			seg.append(np.mean(e))
+		fts = np.append(fts, seg)
+
+		# A = np.fft.fft(signal)
+		# amps = np.abs(A)
 		# phas = np.angle(A)
-		fts = np.append(fts, amps)
+		# fts = np.append(fts, amps)
 		# fts = np.append(fts, phas)
 
 	return list(fts)
