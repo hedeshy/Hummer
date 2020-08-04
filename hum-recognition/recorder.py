@@ -124,11 +124,11 @@ def on_press(key) -> bool:
 			global stop
 			stop = True
 		global humming # global indicator whether humming is going on
-		if not humming and key.char == '3':
-			if recorder:
-				recorder.start_hum('start_question')
-			print('> start quest. hum')
-			humming = True
+		#if not humming and key.char == '3':
+		#	if recorder:
+		#		recorder.start_hum('start_question')
+		#	print('> start quest. hum')
+		#	humming = True
 		if not humming and key.char == '4':
 			if recorder:
 				recorder.start_hum('start_positive')
@@ -167,7 +167,7 @@ def on_release(key) -> bool:
 
 # Recording mode
 print('Record: <ESC> exit, <1> begin record, <2> stop record')
-print('<3> quest. hum, <4> pos. hum, <5> neg. hum, <6> cont. hum')
+print('<4> pos. hum, <5> neg. hum, <6> cont. hum')
 
 # Initialize actual keyboard listener
 listener = keyboard.Listener(

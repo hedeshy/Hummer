@@ -80,6 +80,6 @@ def compute_feature_vector(y: np.array, sr: int) -> List[float]:
 
 	return list(fts)
 
-labels: List[str] = 'none', 'question', 'positive', 'negative', 'continuous'
+labels: List[str] = 'none', 'positive', 'negative', 'continuous'
 def label_int(label: str) -> int:
 	return labels.index(label)

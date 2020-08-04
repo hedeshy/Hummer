@@ -13,6 +13,8 @@ import numpy as np
 import asyncio
 import datetime
 import random
+import pathlib
+import os
 
 class Recognizer:
 
@@ -79,14 +81,14 @@ class Recognizer:
 				if not self._reported_humming == cur_humming:
 					await websocket.send(cur_humming)
 					self._reported_humming = cur_humming
-					print(self._reported_humming)
+					# print(self._reported_humming)
 				await asyncio.sleep(0.01) # would be better to send when new computation is available
 
 		# Start WebSocket
 		start_server = websockets.serve(send, "127.0.0.1", 5678)
 		asyncio.get_event_loop().run_until_complete(start_server)
 
-		print('> start recognizing ' + device_info['name'])
+		print('> start listening to ' + device_info['name'])
 
 model = load(common.SHARED_PATH + '/model.joblib')
 # pca: PCA = load(common.SHARED_PATH + '/pca.joblib')
@@ -95,4 +97,5 @@ recognizer = Recognizer(
 	# pca
 	)
 
+print('> open in Web browser: file:///' + os.path.join(pathlib.Path().absolute(), 'listener.html').replace("\\","/"))
 asyncio.get_event_loop().run_forever()
