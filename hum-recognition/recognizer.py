@@ -69,7 +69,7 @@ class Recognizer:
 		self._stream = sd.RawInputStream(
 				device=host_info['default_input_device'],
 				dtype=self._dtype,
-				blocksize=11000,
+				blocksize=5050,
 				channels=self._channels,
 				samplerate=self._rate,
 				callback=self._callback)
@@ -98,4 +98,5 @@ recognizer = Recognizer(
 	)
 
 print('> open in Web browser: file:///' + os.path.join(pathlib.Path().absolute(), 'listener.html').replace("\\","/"))
+print('> abort with <CTRL>+<C>')
 asyncio.get_event_loop().run_forever()

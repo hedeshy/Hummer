@@ -6,10 +6,14 @@
 
 # Execution
 - `pipenv shell`
-- Run corresponding scripts by calling `python "script".py`
-- Optionally, run `pyinstaller --onefile --hidden-import='pkg_resources.py2_warn' recorder.py` to create an executable
+- To record the audio, run `python ./recorder.py`
+- To compose the dataset, run `python ./dataset.py`
+- To train the model, run `python ./model.py`
+- To use the model, run `python ./recognize.py`
+
+# Make recorder standalone
+Run `pyinstaller --onefile --hidden-import='pkg_resources.py2_warn' recorder.py` to create an executable
 
 # TODO
-- decide whether more than one humming mode label is required
-- make WebSocket more efficient
-- use scipy to export .wav with float32 structure. can be used to verify model input / recognizer
+- Optimize model parameters with grid search
+- Refactor the code
