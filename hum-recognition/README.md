@@ -7,7 +7,7 @@
 # Execution
 - `pipenv shell`
 - To record the audio, run `python ./recorder.py`
-- To compose the dataset, run `python ./dataset.py`
+- To compose the dataset, run `python ./dataset.py`. Considers recordings from `./data` folder, only. One must move recordings there.
 - To train the model, run `python ./model.py`
 - To use the model, run `python ./recognize.py`
 
