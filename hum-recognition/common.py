@@ -4,6 +4,8 @@ from typing import List
 from collections import OrderedDict
 
 SHARED_PATH: str = r'./shared'
+BIN_COUNT: int = 5
+SEGMENT_WIDTH_SEC = 0.5 # limits the "length" of humming
 
 def compute_feature_vector(y: np.array, sr: int) -> List[float]:
 
@@ -33,20 +35,20 @@ def compute_feature_vector(y: np.array, sr: int) -> List[float]:
 	'''
 
 	# Idea: Subdivide window into bins and store freq amplitudes as 
-	bin_count: int = 10
+	
 	total_count = y.shape[0]
-	window_count = int(total_count / bin_count)
+	window_count = int(total_count / BIN_COUNT)
 	# Assumption: total_count % bin_count = 0
 
 	# Go over bins and collect amplitudes and phase
 	fts = np.array([], dtype=np.float32)
-	for i in range(0, bin_count):
+	for i in range(0, BIN_COUNT):
 		start_idx: int = i * window_count
 		end_idx: int = (i + 1) * window_count
 		b: np.array = y[start_idx:end_idx]
 		rmse = librosa.feature.rms(y=b)[0]
-		chroma_stft = librosa.feature.chroma_stft(y=b, sr=sr)
-		chroma_cqt = librosa.feature.chroma_cqt(y=b, sr=sr)
+		# chroma_stft = librosa.feature.chroma_stft(y=b, sr=sr)
+		# chroma_cqt = librosa.feature.chroma_cqt(y=b, sr=sr)
 		spec_cent = librosa.feature.spectral_centroid(y=b, sr=sr)
 		spec_bw = librosa.feature.spectral_bandwidth(y=b, sr=sr)
 		rolloff = librosa.feature.spectral_rolloff(y=b, sr=sr)
@@ -57,8 +59,8 @@ def compute_feature_vector(y: np.array, sr: int) -> List[float]:
 
 		# Fill feature vector
 		seg = []
-		seg.append(np.mean(chroma_stft))
-		seg.append(np.mean(chroma_cqt))
+		# seg.append(np.mean(chroma_stft))
+		# seg.append(np.mean(chroma_cqt))
 		seg.append(np.mean(rmse))
 		seg.append(np.mean(spec_cent))
 		seg.append(np.mean(spec_bw))

@@ -5,6 +5,7 @@ Pipfile.lock
 .vscode
 build
 dist
+shared
 *.spec
 *.joblib
 __pycache__

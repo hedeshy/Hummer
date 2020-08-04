@@ -23,8 +23,7 @@ from joblib import dump
 # Parameters
 DATA_PATH: str = r'./data'
 TMP_PATH: str = r'./tmp'
-SEGMENT_WIDTH_S: float = 0.5
-SEGMENT_STEP_S: float = 0.01
+SEGMENT_STEP_S: float = 0.05
 RATIO_OF_HUM: float = 0.5 # at least 50% of segment must contain humming to be labeled as not 'none'
 
 # Computes overlap of two intervals
@@ -102,8 +101,8 @@ for f in files:
 	# Go over mono data and split into segments
 	pos_s = 0.0
 	i: int = 0
-	window_sample_count: int = int(SEGMENT_WIDTH_S * sr)
-	while pos_s + SEGMENT_WIDTH_S <= length_s:
+	window_sample_count: int = int(common.SEGMENT_WIDTH_SEC * sr)
+	while pos_s + common.SEGMENT_WIDTH_SEC <= length_s:
 		
 		# Get audio segment
 		start_idx: int = int(pos_s * sr)
@@ -126,7 +125,7 @@ for f in files:
 			if value > overlap:
 				overlap = value
 				potential_label = int(key)
-		if float(overlap) / (SEGMENT_WIDTH_S*1000) >= RATIO_OF_HUM:
+		if float(overlap) / (common.SEGMENT_WIDTH_SEC*1000) >= RATIO_OF_HUM:
 			label = potential_label # humming
 		target.append(label)
 

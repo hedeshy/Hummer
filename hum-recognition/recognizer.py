@@ -14,8 +14,6 @@ import asyncio
 import datetime
 import random
 
-SEGMENT_WIDTH_S = 0.5 # limits the "length" of humming
-
 class Recognizer:
 
 	def _callback(self, indata, frames: int, time: dict, status: int) -> None:
@@ -24,7 +22,7 @@ class Recognizer:
 		# Process audio to window length
 		self._segment = np.append(self._segment, data) # copies array
 		sample_count: int = self._segment.shape[0]
-		window_sample_count: int = SEGMENT_WIDTH_S * self._rate * self._channels
+		window_sample_count: int = common.SEGMENT_WIDTH_SEC * self._rate * self._channels
 
 		# For now, only consider windows of full length (otherswise pca and model breaks as feature count is different than expected)
 		if sample_count < window_sample_count:
@@ -39,7 +37,7 @@ class Recognizer:
 		fts = np.array([common.compute_feature_vector(y, self._rate)])
 
 		# TODO: No scaling performed as the model does not do any scaling, too
-		fts = self._pca.transform(fts)
+		# fts = self._pca.transform(fts)
 		pred = self._model.predict(fts).astype(int)
 		self._humming = common.labels[pred[0]]
 		print(self._humming)

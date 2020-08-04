@@ -12,6 +12,9 @@ from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
 
+# Typing
+from typing import List
+
 # Inspiration: https://www.kdnuggets.com/2020/02/audio-data-analysis-deep-learning-python-part-1.html
 EVALUATION_FOLDS: int = 5
 
@@ -75,12 +78,14 @@ print()
 '''
 
 # Perform PCA on entire dataset
+'''
 pca = PCA(n_components=25)
 pca.fit(data)
 dump(pca, common.SHARED_PATH + '/pca.joblib')
 print('> PCA stored')
 data = pca.transform(data)
 print('> Data shape after PCA: ' + str(data.shape))
+'''
 
 # Resample the dataset to remove imbalance
 sm = SMOTE(random_state=42, sampling_strategy='not majority')
@@ -90,7 +95,7 @@ print('> Data shape after SMOTE: ' + str(data.shape))
 # Create classifier
 clf = RandomForestClassifier(
 	random_state=42,
-	n_estimators=100,
+	n_estimators=150,
 	class_weight=None, # 'balanced', 'balanced_subsample'
 	criterion='entropy', # 'gini'
 	max_depth=None,
@@ -121,3 +126,19 @@ clf.fit(data, target)
 dump(clf, common.SHARED_PATH + '/model.joblib')
 print('> Model stored')
 # print(classification_report(target, clf.predict(data), target_names=common.labels))
+
+''' # Does only work without PCA applied
+# Print feature importances
+print("Feature importances:")
+
+# Collect importance of each feature across bins
+feature_count = clf.feature_importances_.shape[0] / common.BIN_COUNT
+print('feature_count: ' + str(feature_count))
+feature_count = int(feature_count)
+acc_imp: List[int] = [0.0] * feature_count
+for i in range(0, feature_count):
+	for j in range(0, common.BIN_COUNT):
+		acc_imp[i] +=  clf.feature_importances_[i + (common.BIN_COUNT * j)]
+for i in range(0, len(acc_imp)):
+	print(str(i) + ': ' + str(100*(acc_imp[i])))
+'''
