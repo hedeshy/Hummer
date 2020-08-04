@@ -3,6 +3,8 @@ import librosa
 from typing import List
 from collections import OrderedDict
 
+SHARED_PATH: str = r'./shared'
+
 def compute_feature_vector(y: np.array, sr: int) -> List[float]:
 
 	'''

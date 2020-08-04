@@ -1,3 +1,4 @@
+import common
 import numpy as np
 from joblib import load
 from joblib import dump
@@ -15,8 +16,8 @@ from sklearn.model_selection import GridSearchCV
 EVALUATION_FOLDS: int = 5
 
 # Load data
-data: np.array = load('data.joblib')
-target: np.array = load('target.joblib')
+data: np.array = load(common.SHARED_PATH + '/data.joblib')
+target: np.array = load(common.SHARED_PATH + '/target.joblib')
 
 # Below is an attempt to automatically determine optimal hyperparameters for model
 '''
@@ -76,7 +77,7 @@ print()
 # Perform PCA on entire dataset
 pca = PCA(n_components=25)
 pca.fit(data)
-dump(pca, 'pca.joblib')
+dump(pca, common.SHARED_PATH + '/pca.joblib')
 print('> PCA stored')
 data = pca.transform(data)
 print('> Data shape after PCA: ' + str(data.shape))
@@ -117,6 +118,6 @@ print('> Precision (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(sco
 
 # Fit classifier on the entire dataset
 clf.fit(data, target)
-dump(clf, 'model.joblib')
+dump(clf, common.SHARED_PATH + '/model.joblib')
 print('> Model stored')
 # print(classification_report(target, clf.predict(data), target_names=common.labels))

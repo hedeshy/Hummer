@@ -143,7 +143,7 @@ data: np.array = np.array(data)
 target: np.array = np.array(target)
 
 # Store dataset
-dump(data, 'data.joblib')
-dump(target, 'target.joblib')
+dump(data, common.SHARED_PATH + '/data.joblib')
+dump(target, common.SHARED_PATH + '/target.joblib')
 
 print('Stored dataset. Shape: ' + str(data.shape))

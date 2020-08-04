@@ -73,8 +73,8 @@ class Recognizer:
 
 		print('> start recognizing ' + device_info['name'])
 
-model = load('model.joblib')
-pca: PCA = load('pca.joblib')
+model = load(common.SHARED_PATH + '/model.joblib')
+pca: PCA = load(common.SHARED_PATH + '/pca.joblib')
 recognizer = Recognizer(model, pca)
 
 async def send(websocket, path):
