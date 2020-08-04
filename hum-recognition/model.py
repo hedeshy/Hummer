@@ -1,7 +1,12 @@
+# Custom
 import common
+
+# Standard
 import numpy as np
 from joblib import load
 from joblib import dump
+
+# ML
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_validate
@@ -15,7 +20,7 @@ from sklearn.model_selection import GridSearchCV
 # Typing
 from typing import List
 
-# Inspiration: https://www.kdnuggets.com/2020/02/audio-data-analysis-deep-learning-python-part-1.html
+# K-fold evaluation
 EVALUATION_FOLDS: int = 5
 
 # Load data
@@ -77,7 +82,7 @@ print()
 
 '''
 
-# Perform PCA on entire dataset
+# Perform PCA on entire dataset (makes it worse atm)
 '''
 pca = PCA(n_components=25)
 pca.fit(data)
@@ -115,7 +120,7 @@ scores = cross_validate(
 print('> Recall (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_recall_macro'])))
 print('> Precision (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_precision_macro'])))
 
-# Scale data (TODO: also scale data for the cross validation, but use a pipeline instead)
+# Scale data (not required for random forest)
 # scaler = StandardScaler()
 # scaler.fit(data)
 # data = scaler.transform(data)

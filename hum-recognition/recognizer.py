@@ -82,7 +82,7 @@ class Recognizer:
 					await websocket.send(cur_humming)
 					self._reported_humming = cur_humming
 					# print(self._reported_humming)
-				await asyncio.sleep(0.01) # would be better to send when new computation is available
+				await asyncio.sleep(0.01) # would be better to send when new computation is available, only
 
 		# Start WebSocket
 		start_server = websockets.serve(send, "127.0.0.1", 5678)
