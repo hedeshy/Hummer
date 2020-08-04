@@ -40,13 +40,16 @@ class Recognizer:
 		# fts = self._pca.transform(fts)
 		pred = self._model.predict(fts).astype(int)
 		self._humming = common.labels[pred[0]]
-		print(self._humming)
 
 	def stop(self) -> None:
 		self._stream.stop()
 		self._stream.close()
 
-	def __init__(self, model, pca: PCA):
+	def __init__(
+		self,
+		model,
+		# pca: PCA
+		):
 
 		# Initialize members
 		host_info: dict = sd.query_hostapis(index=None)[0]
@@ -56,8 +59,9 @@ class Recognizer:
 		self._segment: np.array = np.empty(1)
 		self._dtype: str = 'float32'
 		self._model = model
-		self._pca: PCA = pca
+		# self._pca: PCA = pca
 		self._humming: str = common.labels[0]
+		self._reported_humming: str = "" # used by WebSocket to know whether there is something new to send
 
 		# Create stream
 		self._stream = sd.RawInputStream(
@@ -69,17 +73,26 @@ class Recognizer:
 				callback=self._callback)
 		self._stream.start()
 
+		async def send(websocket, path):
+			while True:
+				cur_humming: str = self._humming # only read, but might be not thread-safe
+				if not self._reported_humming == cur_humming:
+					await websocket.send(cur_humming)
+					self._reported_humming = cur_humming
+					print(self._reported_humming)
+				await asyncio.sleep(0.01) # would be better to send when new computation is available
+
+		# Start WebSocket
+		start_server = websockets.serve(send, "127.0.0.1", 5678)
+		asyncio.get_event_loop().run_until_complete(start_server)
+
 		print('> start recognizing ' + device_info['name'])
 
 model = load(common.SHARED_PATH + '/model.joblib')
-pca: PCA = load(common.SHARED_PATH + '/pca.joblib')
-recognizer = Recognizer(model, pca)
+# pca: PCA = load(common.SHARED_PATH + '/pca.joblib')
+recognizer = Recognizer(
+	model,
+	# pca
+	)
 
-async def send(websocket, path):
-	while True:
-		await websocket.send(recognizer._humming)
-		await asyncio.sleep(1) # would be better to send when new computation is available
-
-start_server = websockets.serve(send, "127.0.0.1", 5678)
-asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()

@@ -24,7 +24,7 @@ from joblib import dump
 DATA_PATH: str = r'./data'
 TMP_PATH: str = r'./tmp'
 SEGMENT_STEP_S: float = 0.05
-RATIO_OF_HUM: float = 0.5 # at least 50% of segment must contain humming to be labeled as not 'none'
+RATIO_OF_HUM: float = 0.75 # at least 75% of segment must contain humming to be labeled as not 'none'
 
 # Computes overlap of two intervals
 def compute_overlap(a, b):
