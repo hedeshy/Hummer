@@ -44,9 +44,9 @@ def compute_feature_vector(y: np.array, sr: int) -> List[float]:
 		signal: np.array = y[start_idx:end_idx]
 		A = np.fft.fft(signal)
 		amps = np.abs(A)
-		phas = np.angle(A)
+		# phas = np.angle(A)
 		fts = np.append(fts, amps)
-		fts = np.append(fts, phas)
+		# fts = np.append(fts, phas)
 
 	return list(fts)
 

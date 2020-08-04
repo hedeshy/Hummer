@@ -158,6 +158,9 @@ target: np.array = np.array(target)
 
 print('> Data shape: ' + str(data.shape))
 
+# Below is an attempt to automatically determine optimal hyperparameters for model
+'''
+
 # Decode on parameters to tune
 tuned_parameters = [{'pca__n_components': [20, 25, 30, 35]}, {'clf__n_estimators': [75, 100, 125]}]
 estimators = [
@@ -208,12 +211,9 @@ print()
 # print(classification_report(y_true, y_pred))
 # print()
 
-
-
-
+'''
 
 # Perform PCA on entire dataset
-# Otherwise, too much data in the remaining operations
 pca = PCA(n_components=25)
 pca.fit(data)
 dump(pca, 'pca.joblib')
@@ -221,7 +221,7 @@ print('> PCA stored')
 data = pca.transform(data)
 print('> Data shape after PCA: ' + str(data.shape))
 
-# Resample the dataset to remove imbalance TODO: reintegrate (maybe not enough sample data) and remember to set class_weight attribute in forest
+# Resample the dataset to remove imbalance
 sm = SMOTE(random_state=42, sampling_strategy='not majority')
 data, target = sm.fit_resample(data, target)
 print('> Data shape after SMOTE: ' + str(data.shape))
