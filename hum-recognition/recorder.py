@@ -154,11 +154,11 @@ def on_release(key) -> bool:
 		global escape
 		escape = True
 		return False # stop listening
-	try:
+	try: # try to stop current humming
 		global humming
 		if humming and key.char == '3' or key.char == '4' or key.char == '5' or key.char == '6':
 			humming = False
-			if humming <= 0 and recorder:
+			if recorder:
 				print('> stop hum')
 				recorder.stop_hum()
 	except:

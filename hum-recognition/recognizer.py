@@ -21,25 +21,25 @@ class Recognizer:
 	def _callback(self, indata, frames: int, time: dict, status: int) -> None:
 		data = np.frombuffer(indata, dtype=np.float32)
 
-		# Process audio to window length
+		# Process audio to segment length
 		self._segment = np.append(self._segment, data) # copies array
 		sample_count: int = self._segment.shape[0]
-		window_sample_count: int = common.SEGMENT_WIDTH_SEC * self._rate * self._channels
+		segment_sample_count: int = common.SEGMENT_WIDTH_SEC * self._rate * self._channels
 
-		# For now, only consider windows of full length (otherswise pca and model breaks as feature count is different than expected)
-		if sample_count < window_sample_count:
+		# For now, only consider segments of full length (otherswise pca and model breaks as feature count is different than expected)
+		if sample_count < segment_sample_count:
 			return
 
-		# Make window
-		count: int = int(min(sample_count, window_sample_count))
-		self._segment = self._segment[-count:] # take latest samples as window
-		y: np.ndarray = librosa.to_mono(self._segment)
+		# Make segment
+		count: int = int(min(sample_count, segment_sample_count))
+		self._segment = self._segment[-count:] # take latest samples as segment
+		y: np.ndarray = librosa.to_mono(self._segment) # should be already mono, according to other settings
 
 		# Compute features
 		fts = np.array([common.compute_feature_vector(y, self._rate)])
 
 		# TODO: No scaling performed as the model does not do any scaling, too
-		# fts = self._pca.transform(fts)
+		# fts = self._pca.transform(fts) # currently, no PCA applied
 		pred = self._model.predict(fts).astype(int)
 		self._humming = common.labels[pred[0]]
 

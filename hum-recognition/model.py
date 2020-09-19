@@ -101,13 +101,14 @@ print('> Data shape after SMOTE: ' + str(data.shape))
 clf = RandomForestClassifier(
 	random_state=42,
 	n_estimators=150,
-	class_weight=None, # 'balanced', 'balanced_subsample'
+	class_weight=None, # 'balanced', 'balanced_subsample' (SMOTE has been already applied, dataset is balanced)
 	criterion='entropy', # 'gini'
 	max_depth=None,
 	min_samples_split=2,
 	min_samples_leaf=1)
 
 # Perform cross-validation
+'''
 print('> Performing cross-validation')
 scores = cross_validate(
 	clf,
@@ -119,6 +120,7 @@ scores = cross_validate(
 	verbose=True)
 print('> Recall (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_recall_macro'])))
 print('> Precision (Macro, k=' + str(EVALUATION_FOLDS) + '): ' + str(np.mean(scores['test_precision_macro'])))
+'''
 
 # Scale data (not required for random forest)
 # scaler = StandardScaler()
@@ -132,7 +134,7 @@ dump(clf, common.SHARED_PATH + '/model.joblib')
 print('> Model stored')
 # print(classification_report(target, clf.predict(data), target_names=common.labels))
 
-''' # Does only work without PCA applied
+# Does only work without PCA applied
 # Print feature importances
 print("Feature importances:")
 
@@ -146,4 +148,3 @@ for i in range(0, feature_count):
 		acc_imp[i] +=  clf.feature_importances_[i + (common.BIN_COUNT * j)]
 for i in range(0, len(acc_imp)):
 	print(str(i) + ': ' + str(100*(acc_imp[i])))
-'''

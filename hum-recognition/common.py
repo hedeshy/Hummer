@@ -7,6 +7,7 @@ SHARED_PATH: str = r'./shared' # artifacts shared among the scripts
 BIN_COUNT: int = 5 # bin in each sample. For each bin all features are computed. Should preserve temporal properties of humming signal.
 SEGMENT_WIDTH_SEC = 0.5 # limits the considered duration of humming
 
+# Computes BIN_COUNT x mumber of features large feature vector for one segment
 def compute_feature_vector(y: np.array, sr: int) -> List[float]:
 
 	'''
@@ -53,7 +54,7 @@ def compute_feature_vector(y: np.array, sr: int) -> List[float]:
 		contrast = librosa.feature.spectral_contrast(y=b, sr=sr)
 		flatness = librosa.feature.spectral_flatness(y=b)
 		zcr = librosa.feature.zero_crossing_rate(b)
-		mfcc = librosa.feature.mfcc(y=b, sr=sr)
+		# mfcc = librosa.feature.mfcc(y=b, sr=sr)
 
 		# Fill feature vector
 		seg = []
@@ -66,8 +67,8 @@ def compute_feature_vector(y: np.array, sr: int) -> List[float]:
 		seg.append(np.mean(contrast))
 		seg.append(np.mean(flatness))
 		seg.append(np.mean(zcr))
-		for e in mfcc: # 20 features
-			seg.append(np.mean(e))
+		# for e in mfcc: # 20 features
+		# 	seg.append(np.mean(e))
 		fts = np.append(fts, seg)
 
 		# A = np.fft.fft(signal)

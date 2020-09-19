@@ -34,9 +34,9 @@ def compute_overlap(a, b):
 # Get dataset
 files: Set[str] = set([splitext(f)[0] for f in listdir(DATA_PATH) if isfile(join(DATA_PATH, f))])
 
-# Import dataset
+# Storage of processed dataset
 data: List[List[float]] = []
-target: List[int] = [] # right now: 0 or 1
+target: List[int] = [] # what kind of humming
 
 # Go over files
 for f in files:
@@ -74,14 +74,14 @@ for f in files:
 			hum_labels.append(common.label_int(event[6:]))
 	# Above assumes that events are ordered correctly in the json (should be the case)
 
-	# Go over hums and make triples of start and end and label indicator
+	# Go over hums and make triples of start and end and label
 	class Hum(NamedTuple):
 		start_ms: int
 		end_ms: int
 		label: int
 
 	hums: List[Hum] = []
-	if hum_starts_ms and hum_ends_ms and hum_labels:
+	if hum_starts_ms and hum_ends_ms and hum_labels: # there must be labels to proceed
 
 		# Check if there is an end before the first start and remove that end
 		# if hum_ends_ms[0] < hum_starts_ms[0]:
@@ -102,12 +102,12 @@ for f in files:
 	# Go over mono data and split into segments
 	pos_s = 0.0
 	i: int = 0
-	window_sample_count: int = int(common.SEGMENT_WIDTH_SEC * sr)
+	segment_sample_count: int = int(common.SEGMENT_WIDTH_SEC * sr)
 	while pos_s + common.SEGMENT_WIDTH_SEC <= length_s:
 		
 		# Get audio segment
 		start_idx: int = int(pos_s * sr)
-		end_idx: int = start_idx + window_sample_count
+		end_idx: int = start_idx + segment_sample_count
 		y: np.array = x_mono[start_idx:end_idx]
 
 		# Compute feature vector
@@ -117,16 +117,16 @@ for f in files:
 		label: int = 0
 		start_ms: int = int(1000 * (start_idx / sr))
 		end_ms: int = int(1000 * (end_idx / sr))
-		overlaps: defaultdict = defaultdict(int) # start for every counting at zero
+		overlaps: defaultdict = defaultdict(int) # stores duration of each label in segment; start for every counting at zero
 		for hum in hums:
 			overlaps[str(hum.label)] += compute_overlap((start_ms, end_ms), (hum.start_ms, hum.end_ms))
-		overlap: int = 0
+		potential_overlap: int = 0
 		potential_label: int = 0
 		for key, value in overlaps.items(): # get most overlapping humming label
-			if value > overlap:
-				overlap = value
+			if value > potential_overlap:
+				potential_overlap = value
 				potential_label = int(key)
-		if float(overlap) / (common.SEGMENT_WIDTH_SEC*1000) >= RATIO_OF_HUM:
+		if float(potential_overlap) / (common.SEGMENT_WIDTH_SEC*1000) >= RATIO_OF_HUM:
 			label = potential_label # humming
 		target.append(label)
 

@@ -16,5 +16,4 @@ Run `pyinstaller --onefile --hidden-import='pkg_resources.py2_warn' recorder.py`
 
 # TODO
 - Optimize model hyper parameters with grid search
-- Refactor the code
-- More typing
+- Make recorder interface with a Web page and connect via WebSocket
